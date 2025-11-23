@@ -1,0 +1,153 @@
+\documentclass{article}
+\usepackage[top=2cm, bottom=2cm, left=2cm , right=2cm]{geometry}
+%\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{wasysym}
+
+\title{Développement réseau/intelligence artificielle}
+\date{}
+
+\begin{document}
+\maketitle
+\section{Contexte et travail à réaliser}
+Le but de ce projet est de développer une intelligence artificielle (ou au moins un truc qui pourrait passer pour une intelligence) pour diriger un personnage dans un espace clos (que nous appellerons "labyrinthe"). Votre programme devra être capable d'atteindre le but suivant : récupérer un maximum de points en ramassant des moules disséminés dans le labyrinthe. Votre personnage ne sera peut être pas le seul dans cet espace. Il pourrait affronter l'intelligence d'un ou plusieurs autres étudiants en tour à tour. Afin de vous aider dans votre mission, divers bonus seront placés tout au long du parcours.\\~
+
+L'interface du jeu contient deux parties : le labyrinthe dans la partie gauche et les scores à droite.\\Le labyrinthe peut se présenter sous diverses formes et complexités :
+\begin{itemize}
+\item La figure \ref{typeLaby1} montre un labyrinthe \textbf{parfait}.
+\item La figure \ref{typeLaby2} montre un labyrinthe assez ouvert comprenant quelques murs.
+\end{itemize}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\linewidth]{./images/typeLaby2}
+  \caption{Labyrinthe parfait.}
+  \label{typeLaby1}
+\end{figure}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\linewidth]{./images/typeLaby}
+  \caption{Labyrinthe présentant une surface assez ouverte avec quelques murs.}
+  \label{typeLaby2}
+\end{figure}
+
+
+Comme vous pouvez le voir sur les figures~\ref{typeLaby1} et~\ref{typeLaby2}, les labyrinthes sont composés de blocs différents :
+\begin{itemize}
+\item de l'herbe sur laquelle vous pouvez marcher,
+\item les blocs jaunes représentent des murs quasi infranchissables donc des blocs sur lesquels vous ne pouvez pas vous positionner,
+\item des frites (bloc bonus) qui vous permettront d'avancer de deux cases dans une direction, et ce, même s'il y a un mur qui vous sépare du point d'arrivée. Lorsque vous utiliserez ce bonus, vous devrez bien faire attention à ce que le point d'arrivée soit une case sur laquelle vous pouvez marcher\footnote{de l'herbe, un bonus ou une moule}. Dans le cas contraire, le personnage avancera d'une case dans la direction donnée si cela est possible. Évidemment, les bonus et/ou moules sur le passage seront ramassés.
+\item des bières (bloc bonus) qui vous permettent de jouer trois coups à la suite (mais ne permet pas de franchir les murs). Évidemment, les bonus et/ou moules sur le passage seront ramassés.
+\item des moules qui vous permettent d'engranger des points. Les moules ont un nombre de points aléatoires décidés en début de partie.
+\item plusieurs personnages dont un sera déplacé grâce à votre programme.
+\end{itemize}
+Les blocs "frites", "bières" et "moules" disparaissent lorsqu'un joueur passe dessus. Ils sont automatiquement transformés en herbe. Les frites et bières sont collectées et conservées pour pouvoir être utilisées lorsque le joueur le souhaite.
+
+\section{Dialogue avec le serveur}
+Dans un premier temps, vous allez devoir créer un socket qui doit ouvrir une connexion avec le serveur\footnote{Par défaut, le port utilisé est le 1337.}. Une fois cette connexion ouverte, vous enverrez votre nom d'équipe et passerez en écoute pour récupérer votre numéro de joueur\footnote{Le joueur 0 se trouve en haut à gauche, le joueur 1 en bas à droite, le joueur 2 en haut à droite et le joueur 3 en bas à gauche.}.
+Lorsque tous les joueurs seront connectés et que ce sera votre tour, les informations complètes du labyrinthe vous seront envoyées. Il vous faudra ensuite décider quel coup jouer et l'envoyer au travers du socket.
+
+Votre programme devra donc suivre cette architecture :
+\begin{verbatim}
+DEBUT DE PROGRAMME
+  Création du socket
+  Envoi de votre nom d'équipe
+  Réception du numéro de joueur
+  Boucle
+    Réception des informations du labyrinthe
+    Calcul du prochain coup à jouer (votre IA)
+    Envoi du coup
+  Fin De Boucle
+FIN DE PROGRAMME
+\end{verbatim}
+
+Le jeu s'arrête lorsque le serveur vous envoie le mot \texttt{FIN} à la place des informations sur le labyrinthe. Cela signifie que toutes les moules ont été ramassés, que le nombre de tours maximum a été dépassé ou que tous les joueurs ont passé leur tour.
+
+N'oubliez pas de prévoir de pouvoir spécifier à votre programme l'adresse ip, le port pour la connexion au serveur ainsi qu'un nom d'équipe.
+
+\subsection{Réception des données}
+Pour ce qui est de la structure de la chaîne de caractères que vous allez recevoir, elle est composée comme ceci :\\\texttt{"taille/structureLabyrinthe/infosJoueurs"}.
+
+Par exemple (voir figure~\ref{labyExempleCode}):
+\begin{verbatim}
+13x11/Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-So-Mu-So-So-So-Mu-So-Mu-So-So-So-Mu-Mu-So-Mu-
+Mu-Mu-So-Mu-So-Mu-So-Mu-So-Mu-Mu-So-So-So-Mu-50-30-So-90-60-Mu-So-Mu-Mu-So-Mu-Mu-Mu-Bp-Mu-Mu-
+Mu-Mu-Mu-So-Mu-Mu-So-So-20-Bp-Bs-Mu-Bp-Mu-So-So-So-Mu-Mu-So-Mu-80-Mu-Mu-Mu-Bp-Mu-So-Mu-Mu-Mu-
+Mu-So-Mu-So-40-Bp-10-So-Mu-So-So-So-Mu-Mu-So-Mu-Mu-Mu-So-Mu-So-Mu-Mu-Mu-So-Mu-Mu-So-Mu-So-So-
+So-Mu-So-Mu-So-So-So-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu-Mu/2-1,8-11,2
+\end{verbatim}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\linewidth]{./images/labyExempleCode}
+  \caption{Labyrinthe dont la structure est donnée sous forme de chaîne de caractères.}
+  \label{labyExempleCode}
+\end{figure}%
+
+La taille du plateau correspond à la largeur et à la hauteur séparées par le caractère '\texttt{x}'.\\~
+
+Pour la structure du labyrinthe, l'ensemble des blocs est donné sous forme d'une ligne de lettres ou de nombres séparés par des tirets. Cette ligne représente le labyrinthe entier en partant du bloc tout en haut à gauche\footnote{Bloc se trouvant en (0,0)} jusqu'en bas à droite (de gauche à droite et de haut en bas). Les codes utilisés sont les suivants :
+\begin{itemize}
+\item La lettre "Mu" pour un mur.
+\item La lettre "So" pour de le sol.
+\item La lettre "Bs" pour un bonus frite (bonus de saut).
+\item La lettre "Bp" pour un bonus bière (bonus des 3 pas).
+\item Un nombre pour une moule. Le nombre représente le nombre de points que vous gagnerez en ramassant la moule.
+\end{itemize}
+Remarque : Le labyrinthe est \textbf{toujours} entouré de murs. Il n'y a pas de sortie. Dans les informations de structure, les murs entourant le labyrinthe sont présentes. C'est pourquoi la structure commencera toujours par autant de murs que la largeur du labyrinthe (+1 pour le mur tout à gauche sur la première ligne jouable).\\~
+
+Les informations concernant les joueurs contiennent : Le nombre de joueurs dans le labyrinthe suivi d'autant de couples X,Y séparés par des tirets donnant leur position.\\~
+
+L'exemple précédent représente un labyrinthe de 13 cases horizontalement par 11 cases verticalement. Les 143 (13$\times$11) codes suivants représentent la structure du labyrinthe. Finalement, il est indiqué qu'il y a 2 joueurs. Le joueur 0 se trouve en $(1,8)$ et le joueur 1 se trouve en $(11,2)$. \textbf{Attention !} Les indices commencent à 0.\\~
+
+\subsection{Envoi des données}
+Les coups que vous allez devoir envoyer seront représentés par une lettre simple pour les mouvements simples et un ensemble de plusieurs lettres séparées par des "-" lorsque vous utiliserez des bonus.\\~
+
+Les messages simples sont les suivants :
+\begin{itemize}
+\item "N" pour aller au Nord (en haut)
+\item "S" pour aller au Sud (en bas)
+\item "E" pour aller à l'Est (à droite)
+\item "O" pour aller à l'Ouest (à gauche)
+\item "C" pour rester là où vous êtes (Centre). À utiliser si vous voulez passer votre tour.
+\end{itemize}~\\
+
+Les messages composés (si vous utilisez des bonus que vous auriez récoltés) sont les suivants :
+\begin{itemize}
+\item pour utiliser une frite qui vous permet d'avancer de deux cases dans une direction même si un mur vous sépare de la position d'arrivée : envoyez le code "Bs" suivi d'un "-" et de la direction dans laquelle vous voulez aller. Par exemple, si vous envoyez le code "Bs-S", vous allez avancer de deux cases vers le sud même si un mur se trouve juste en dessous de vous. Rappel : ceci n'est possible que si la position d'arrivée est une case sur laquelle vous pouvez marcher.
+\item pour utiliser une bière qui vous permet de faire trois déplacements au lieu d'un seul : envoyez le code "Bp" suivi d'un "-" et de trois directions (et exactement trois) séparés également par des "-". Par exemple, si vous envoyez le code "Bp-E-E-S", vous allez effectuer les trois déplacements (Est, Est puis Sud) en un seul tour. Rappel : Seuls les coups valables seront effectués.
+\end{itemize}
+Attention à bien utiliser vos bonus lorsque c'est possible seulement sinon ils seront perdus.\\~
+
+\textbf{A noter} : Deux joueurs peuvent se trouver sur la même case au même moment.\\~
+
+\section{Fichiers fournis}
+Dans ce dépôt git, vous pourrez trouver plusieurs répertoires :
+\begin{itemize}
+\item \texttt{Serveur} $\to$ répertoire contenant les fichiers sources pour compiler puis exécuter le serveur.\\
+Pour compiler le serveur, exécutez :\\
+\texttt{javac PecheAuxMoules.java}\\
+Pour exécuter le programme serveur, il vous suffit d'exécuter la classe principale :\\
+\texttt{java PecheAuxMoules}\\
+Ajoutez l'option -h pour prendre connaissance des différentes options possibles.
+\item \texttt{IA} $\to$ Répertoire contenant trois IA fournies en exemple.\\
+\texttt{alea} : IA purement aléatoire qui choisit une direction au hasard.\\
+\texttt{aleaQuiNeSeCognePas} : IA aléatoire qui choisit une direction au hasard parmi celles possibles.\\
+\texttt{parcoursComplet} : IA qui va parcourir le labyrinthe en passant sur toutes les cases.
+\end{itemize}
+
+Pour exécuter un client, compilez et exéctuez le (exemple avec alea) :\\
+\texttt{javac ClientAlea.java}\\
+\texttt{java ClientAlea 127.0.0.1 1337 nomDeMonIA}\\
+Pour rappel, les paramètres suivants le nom de la classe du client sont : l'adresse ip du serveur et le port à utiliser et le nom de l'IA.
+
+%\section{Méthode d'évaluation}
+%TODO
+
+%\section{Dépôt de votre programme}
+%TODO
+
+\end{document}

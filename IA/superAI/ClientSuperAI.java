@@ -56,7 +56,10 @@ public class ClientSuperAI {
     }
 
     private static String choisirCoup(EtatJeu etat, int idJoueur) {
-        // A remplacer par l'IA
-        return "C";
+        // Étape 3 : on passe par la simulation avec un coup simple par défaut
+        Joueur joueur = etat.getJoueur(idJoueur);
+        Action action = Action.simple('C');
+        MoteurSimulation.appliquer(etat, joueur, action);
+        return action.versCommande();
     }
 }

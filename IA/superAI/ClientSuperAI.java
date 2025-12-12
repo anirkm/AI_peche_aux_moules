@@ -34,6 +34,8 @@ public class ClientSuperAI {
             // Numéro de joueur envoyé par le serveur
             int idJoueur = Integer.parseInt(ligne.trim());
 
+            Inventaire inventaire = new Inventaire();
+
             while (true) {
                 String message = entree.readLine();
                 if (message == null || "FIN".equals(message)) {
@@ -43,9 +45,14 @@ public class ClientSuperAI {
                 // Décodage de l'état du jeu
                 EtatJeu etat = EtatJeu.depuisMessage(message);
                 // Choix du coup (placeholder pour l'instant)
-                String coup = choisirCoup(etat, idJoueur);
+                Action action = choisirCoup(etat, idJoueur, inventaire);
 
-                sortie.println(coup);
+                // Mise à jour locale de l'inventaire
+                Joueur joueur = etat.getJoueur(idJoueur);
+                ResultatSimulation sim = MoteurSimulation.appliquer(etat, joueur, inventaire, action);
+                inventaire.appliquer(sim);
+
+                sortie.println(action.versCommande());
             }
 
             socket.close();
@@ -55,9 +62,8 @@ public class ClientSuperAI {
         }
     }
 
-    private static String choisirCoup(EtatJeu etat, int idJoueur) {
-        // Décision simple basée sur les distances
-        Action action = IA.choisirAction(etat, idJoueur);
-        return action.versCommande();
+    private static Action choisirCoup(EtatJeu etat, int idJoueur, Inventaire inventaire) {
+        // Décision basée sur la valeur, les distances et les bonus
+        return IA.choisirAction(etat, idJoueur, inventaire);
     }
 }

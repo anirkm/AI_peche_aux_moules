@@ -56,10 +56,8 @@ public class ClientSuperAI {
     }
 
     private static String choisirCoup(EtatJeu etat, int idJoueur) {
-        // Étape 3 : on passe par la simulation avec un coup simple par défaut
-        Joueur joueur = etat.getJoueur(idJoueur);
-        Action action = Action.simple('C');
-        MoteurSimulation.appliquer(etat, joueur, action);
+        // Décision simple basée sur les distances
+        Action action = IA.choisirAction(etat, idJoueur);
         return action.versCommande();
     }
 }

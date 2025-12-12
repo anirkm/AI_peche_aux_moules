@@ -1,100 +1,155 @@
 package superAI;
 
 class IA {
-    static Action choisirAction(EtatJeu etat, int idJoueur) {
+    private static final double VALEUR_SAUT = 20.0;
+    private static final double VALEUR_TROIS_PAS = 30.0;
+    private static final double PENALITE_UTILISATION_SAUT = 8.0;
+    private static final double PENALITE_UTILISATION_TROIS_PAS = 12.0;
+    private static final double PENALITE_DISTANCE = 1.4;
+
+    static Action choisirAction(EtatJeu etat, int idJoueur, Inventaire inventaire) {
         Labyrinthe laby = etat.getLabyrinthe();
         Joueur joueur = etat.getJoueur(idJoueur);
 
-        // Distance depuis notre position
-        int[] dist = Distances.bfs(laby, joueur.getX(), joueur.getY());
+        // Distance minimale des adversaires vers chaque case
+        int[] distAdversaires = distancesAdversaires(etat, idJoueur);
 
-        int meilleureCase = -1;
+        Action meilleure = Action.simple('C');
         double meilleurScore = -1e18;
 
-        // Choix de la moule la plus intéressante
-        for (int y = 0; y < laby.getHauteur(); y++) {
-            for (int x = 0; x < laby.getLargeur(); x++) {
-                CaseJeu c = laby.getCase(x, y);
-                if (!c.estMoule()) {
-                    continue;
-                }
-                int d = dist[laby.index(x, y)];
-                if (d >= Distances.INFINI) {
-                    continue;
-                }
-                double score = c.getValeur() / (d + 1.0);
-                if (score > meilleurScore) {
-                    meilleurScore = score;
-                    meilleureCase = laby.index(x, y);
+        for (Action action : actionsPossibles(inventaire)) {
+            ResultatSimulation sim = MoteurSimulation.appliquer(etat, joueur, inventaire, action);
+            int[] dist = Distances.bfs(laby, sim.x, sim.y);
+
+            double futur = evaluerFutur(laby, dist, distAdversaires, sim);
+            double score = sim.points
+                + VALEUR_SAUT * sim.bonusSautGagne
+                + VALEUR_TROIS_PAS * sim.bonusTroisPasGagne
+                - PENALITE_UTILISATION_SAUT * sim.bonusSautUtilise
+                - PENALITE_UTILISATION_TROIS_PAS * sim.bonusTroisPasUtilise
+                + futur;
+
+            if (score > meilleurScore) {
+                meilleurScore = score;
+                meilleure = action;
+            }
+        }
+
+        return meilleure;
+    }
+
+    private static Action[] actionsPossibles(Inventaire inventaire) {
+        int base = 5;
+        int saut = inventaire.getBonusSaut() > 0 ? 4 : 0;
+        int trois = inventaire.getBonusTroisPas() > 0 ? 64 : 0;
+        Action[] actions = new Action[base + saut + trois];
+        int idx = 0;
+
+        actions[idx++] = Action.simple('N');
+        actions[idx++] = Action.simple('S');
+        actions[idx++] = Action.simple('E');
+        actions[idx++] = Action.simple('O');
+        actions[idx++] = Action.simple('C');
+
+        if (saut > 0) {
+            actions[idx++] = Action.saut('N');
+            actions[idx++] = Action.saut('S');
+            actions[idx++] = Action.saut('E');
+            actions[idx++] = Action.saut('O');
+        }
+
+        if (trois > 0) {
+            char[] dirs = new char[]{'N', 'S', 'E', 'O'};
+            for (char d1 : dirs) {
+                for (char d2 : dirs) {
+                    for (char d3 : dirs) {
+                        actions[idx++] = Action.troisPas(d1, d2, d3);
+                    }
                 }
             }
         }
 
-        if (meilleureCase == -1) {
-            return Action.simple('C');
-        }
-
-        int cibleX = meilleureCase % laby.getLargeur();
-        int cibleY = meilleureCase / laby.getLargeur();
-        int[] distVersCible = Distances.bfs(laby, cibleX, cibleY);
-
-        return choisirPasVersCible(laby, joueur.getX(), joueur.getY(), distVersCible);
+        return actions;
     }
 
-    private static Action choisirPasVersCible(Labyrinthe laby, int x, int y, int[] distVersCible) {
-        char meilleur = 'C';
-        int meilleurD = distVersCible[laby.index(x, y)];
+    private static double evaluerFutur(Labyrinthe laby, int[] dist,
+                                       int[] distAdversaires, ResultatSimulation sim) {
+        double meilleur = -1e18;
 
-        // Test des 4 directions
-        meilleur = choisirSiMieux(laby, distVersCible, x, y, 'N', meilleur, meilleurD);
-        meilleurD = distanceApres(laby, distVersCible, x, y, meilleur, meilleurD);
-        meilleur = choisirSiMieux(laby, distVersCible, x, y, 'S', meilleur, meilleurD);
-        meilleurD = distanceApres(laby, distVersCible, x, y, meilleur, meilleurD);
-        meilleur = choisirSiMieux(laby, distVersCible, x, y, 'E', meilleur, meilleurD);
-        meilleurD = distanceApres(laby, distVersCible, x, y, meilleur, meilleurD);
-        meilleur = choisirSiMieux(laby, distVersCible, x, y, 'O', meilleur, meilleurD);
+        for (int y = 0; y < laby.getHauteur(); y++) {
+            for (int x = 0; x < laby.getLargeur(); x++) {
+                int idx = laby.index(x, y);
+                if (sim.aCollecte(idx)) {
+                    continue;
+                }
 
-        return Action.simple(meilleur);
+                CaseJeu c = laby.getCase(x, y);
+                double base;
+                if (c.getType() == CaseJeu.Type.MOULE) {
+                    base = c.getValeur();
+                } else if (c.getType() == CaseJeu.Type.SAUT) {
+                    base = VALEUR_SAUT;
+                } else if (c.getType() == CaseJeu.Type.TROIS_PAS) {
+                    base = VALEUR_TROIS_PAS;
+                } else {
+                    continue;
+                }
+
+                int d = dist[idx];
+                if (d >= Distances.INFINI) {
+                    continue;
+                }
+
+                int dOpp = distAdversaires[idx];
+                double contest = estimationContest(d, dOpp);
+
+                double score = base * contest - PENALITE_DISTANCE * d;
+                if (score > meilleur) {
+                    meilleur = score;
+                }
+            }
+        }
+
+        return meilleur == -1e18 ? 0.0 : meilleur;
     }
 
-    private static char choisirSiMieux(Labyrinthe laby, int[] distVersCible,
-                                       int x, int y, char dir, char actuel, int distActuelle) {
-        int[] d = delta(dir);
-        int nx = x + d[0];
-        int ny = y + d[1];
-        if (!laby.dansBornes(nx, ny) || laby.estMur(nx, ny)) {
-            return actuel;
+    private static double estimationContest(int dMoi, int dOpp) {
+        if (dOpp >= Distances.INFINI) {
+            return 1.0;
         }
-        int dist = distVersCible[laby.index(nx, ny)];
-        if (dist < distActuelle) {
-            return dir;
+        if (dMoi < dOpp) {
+            return 1.0;
         }
-        return actuel;
+        if (dMoi == dOpp) {
+            return 0.5;
+        }
+        if (dMoi <= dOpp + 1) {
+            return 0.25;
+        }
+        return 0.0;
     }
 
-    private static int distanceApres(Labyrinthe laby, int[] distVersCible,
-                                     int x, int y, char dir, int fallback) {
-        int[] d = delta(dir);
-        int nx = x + d[0];
-        int ny = y + d[1];
-        if (!laby.dansBornes(nx, ny) || laby.estMur(nx, ny)) {
-            return fallback;
+    private static int[] distancesAdversaires(EtatJeu etat, int idJoueur) {
+        Labyrinthe laby = etat.getLabyrinthe();
+        int n = laby.getLargeur() * laby.getHauteur();
+        int[] min = new int[n];
+        for (int i = 0; i < n; i++) {
+            min[i] = Distances.INFINI;
         }
-        return distVersCible[laby.index(nx, ny)];
-    }
 
-    private static int[] delta(char dir) {
-        switch (dir) {
-            case 'N':
-                return new int[]{0, -1};
-            case 'S':
-                return new int[]{0, 1};
-            case 'E':
-                return new int[]{1, 0};
-            case 'O':
-                return new int[]{-1, 0};
-            default:
-                return new int[]{0, 0};
+        for (int i = 0; i < etat.getNbJoueurs(); i++) {
+            if (i == idJoueur) {
+                continue;
+            }
+            Joueur j = etat.getJoueur(i);
+            int[] dist = Distances.bfs(laby, j.getX(), j.getY());
+            for (int k = 0; k < n; k++) {
+                if (dist[k] < min[k]) {
+                    min[k] = dist[k];
+                }
+            }
         }
+
+        return min;
     }
 }

@@ -1,7 +1,7 @@
 package superAI;
 
 class MoteurSimulation {
-    static ResultatSimulation appliquer(EtatJeu etat, Joueur joueur, Action action) {
+    static ResultatSimulation appliquer(EtatJeu etat, Joueur joueur, Inventaire inventaire, Action action) {
         Labyrinthe laby = etat.getLabyrinthe();
 
         int x = joueur.getX();
@@ -20,7 +20,7 @@ class MoteurSimulation {
                 break;
             case SAUT:
                 // Bonus saut : 2 cases si la cible est valide
-                if (joueur.getBonusSaut() > 0) {
+                if (inventaire.getBonusSaut() > 0) {
                     int[] delta = delta(action.getD1());
                     int nx = x + delta[0] * 2;
                     int ny = y + delta[1] * 2;
@@ -39,7 +39,7 @@ class MoteurSimulation {
                 break;
             case TROIS_PAS:
                 // Bonus 3 pas : trois déplacements simples
-                if (joueur.getBonusTroisPas() > 0) {
+                if (inventaire.getBonusTroisPas() > 0) {
                     int[] p1 = deplacerSimple(laby, x, y, action.getD1());
                     x = p1[0];
                     y = p1[1];

@@ -17,6 +17,7 @@ public class ClientSuperAI {
         String adresse = args[0];
         int port = Integer.parseInt(args[1]);
         String nomEquipe = args[2];
+        ParametresIA parametres = ParametresIA.depuisArgs(args, 3);
 
         try {
             Socket socket = new Socket(adresse, port);
@@ -45,7 +46,7 @@ public class ClientSuperAI {
                 // Décodage de l'état du jeu
                 EtatJeu etat = EtatJeu.depuisMessage(message);
                 // Choix du coup
-                Action action = choisirCoup(etat, idJoueur, inventaire);
+                Action action = choisirCoup(etat, idJoueur, inventaire, parametres);
 
                 // Mise à jour locale de l'inventaire
                 Joueur joueur = etat.getJoueur(idJoueur);
@@ -62,8 +63,8 @@ public class ClientSuperAI {
         }
     }
 
-    private static Action choisirCoup(EtatJeu etat, int idJoueur, Inventaire inventaire) {
+    private static Action choisirCoup(EtatJeu etat, int idJoueur, Inventaire inventaire, ParametresIA parametres) {
         // Décision basée sur la valeur, les distances et les bonus
-        return IA.choisirAction(etat, idJoueur, inventaire);
+        return IA.choisirAction(etat, idJoueur, inventaire, parametres);
     }
 }

@@ -1,14 +1,7 @@
 package superAI;
 
 class IA {
-    private static final double VALEUR_SAUT = 20.0;
-    private static final double VALEUR_TROIS_PAS = 30.0;
-    private static final double PENALITE_UTILISATION_SAUT = 8.0;
-    private static final double PENALITE_UTILISATION_TROIS_PAS = 12.0;
-    private static final double PENALITE_DISTANCE = 1.4;
-    private static final double COEFF_PROFONDEUR = 0.6;
-
-    static Action choisirAction(EtatJeu etat, int idJoueur, Inventaire inventaire) {
+    static Action choisirAction(EtatJeu etat, int idJoueur, Inventaire inventaire, ParametresIA parametres) {
         Labyrinthe laby = etat.getLabyrinthe();
         Joueur joueur = etat.getJoueur(idJoueur);
 
@@ -22,13 +15,13 @@ class IA {
             ResultatSimulation sim = MoteurSimulation.appliquer(etat, joueur, inventaire, action);
             int[] dist = Distances.bfs(laby, sim.x, sim.y);
 
-            double score = scoreSimulation(laby, dist, distAdversaires, sim, null);
+            double score = scoreSimulation(laby, dist, distAdversaires, sim, null, parametres);
 
             // Petit coup d'avance
             Inventaire invApres = inventaire.copie();
             invApres.appliquer(sim);
-            double suite = meilleurApres(etat, idJoueur, sim, invApres, distAdversaires);
-            score += COEFF_PROFONDEUR * suite;
+            double suite = meilleurApres(etat, idJoueur, sim, invApres, distAdversaires, parametres);
+            score += parametres.coeffProfondeur * suite;
 
             if (score > meilleurScore) {
                 meilleurScore = score;
@@ -74,7 +67,7 @@ class IA {
     }
 
     private static double meilleurApres(EtatJeu etat, int idJoueur, ResultatSimulation sim1,
-                                        Inventaire inventaire, int[] distAdversaires) {
+                                        Inventaire inventaire, int[] distAdversaires, ParametresIA parametres) {
         Labyrinthe laby = etat.getLabyrinthe();
         Joueur joueur = new Joueur(idJoueur, sim1.x, sim1.y);
         double meilleur = -1e18;
@@ -82,7 +75,7 @@ class IA {
         for (Action action : actionsPossibles(inventaire)) {
             ResultatSimulation sim2 = MoteurSimulation.appliquer(etat, joueur, inventaire, action, sim1);
             int[] dist = Distances.bfs(laby, sim2.x, sim2.y);
-            double score = scoreSimulation(laby, dist, distAdversaires, sim2, sim1);
+            double score = scoreSimulation(laby, dist, distAdversaires, sim2, sim1, parametres);
             if (score > meilleur) {
                 meilleur = score;
             }
@@ -93,19 +86,19 @@ class IA {
 
     private static double scoreSimulation(Labyrinthe laby, int[] dist,
                                           int[] distAdversaires, ResultatSimulation sim,
-                                          ResultatSimulation deja) {
-        double futur = evaluerFutur(laby, dist, distAdversaires, sim, deja);
+                                          ResultatSimulation deja, ParametresIA parametres) {
+        double futur = evaluerFutur(laby, dist, distAdversaires, sim, deja, parametres);
         return sim.points
-            + VALEUR_SAUT * sim.bonusSautGagne
-            + VALEUR_TROIS_PAS * sim.bonusTroisPasGagne
-            - PENALITE_UTILISATION_SAUT * sim.bonusSautUtilise
-            - PENALITE_UTILISATION_TROIS_PAS * sim.bonusTroisPasUtilise
+            + parametres.valeurSaut * sim.bonusSautGagne
+            + parametres.valeurTroisPas * sim.bonusTroisPasGagne
+            - parametres.penaliteUtilisationSaut * sim.bonusSautUtilise
+            - parametres.penaliteUtilisationTroisPas * sim.bonusTroisPasUtilise
             + futur;
     }
 
     private static double evaluerFutur(Labyrinthe laby, int[] dist,
                                        int[] distAdversaires, ResultatSimulation sim,
-                                       ResultatSimulation deja) {
+                                       ResultatSimulation deja, ParametresIA parametres) {
         double meilleur = -1e18;
 
         for (int y = 0; y < laby.getHauteur(); y++) {
@@ -120,9 +113,9 @@ class IA {
                 if (c.getType() == CaseJeu.Type.MOULE) {
                     base = c.getValeur();
                 } else if (c.getType() == CaseJeu.Type.SAUT) {
-                    base = VALEUR_SAUT;
+                    base = parametres.valeurSaut;
                 } else if (c.getType() == CaseJeu.Type.TROIS_PAS) {
-                    base = VALEUR_TROIS_PAS;
+                    base = parametres.valeurTroisPas;
                 } else {
                     continue;
                 }
@@ -135,7 +128,7 @@ class IA {
                 int dOpp = distAdversaires[idx];
                 double contest = estimationContest(d, dOpp);
 
-                double score = base * contest - PENALITE_DISTANCE * d;
+                double score = base * contest - parametres.penaliteDistance * d;
                 if (score > meilleur) {
                     meilleur = score;
                 }

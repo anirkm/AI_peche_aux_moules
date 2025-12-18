@@ -2,6 +2,11 @@ package superAI;
 
 class MoteurSimulation {
     static ResultatSimulation appliquer(EtatJeu etat, Joueur joueur, Inventaire inventaire, Action action) {
+        return appliquer(etat, joueur, inventaire, action, null);
+    }
+
+    static ResultatSimulation appliquer(EtatJeu etat, Joueur joueur, Inventaire inventaire,
+                                        Action action, ResultatSimulation dejaCollecte) {
         Labyrinthe laby = etat.getLabyrinthe();
 
         int x = joueur.getX();
@@ -16,7 +21,7 @@ class MoteurSimulation {
                 int[] pos = deplacerSimple(laby, x, y, action.getD1());
                 x = pos[0];
                 y = pos[1];
-                ramasser(laby, resultat, x, y);
+                ramasser(laby, resultat, dejaCollecte, x, y);
                 break;
             case SAUT:
                 // Bonus saut : 2 cases si la cible est valide
@@ -27,13 +32,13 @@ class MoteurSimulation {
                     if (laby.dansBornes(nx, ny) && !laby.estMur(nx, ny)) {
                         x = nx;
                         y = ny;
-                        ramasser(laby, resultat, x, y);
+                        ramasser(laby, resultat, dejaCollecte, x, y);
                         resultat.bonusSautUtilise = 1;
                     } else {
                         int[] fallback = deplacerSimple(laby, x, y, action.getD1());
                         x = fallback[0];
                         y = fallback[1];
-                        ramasser(laby, resultat, x, y);
+                        ramasser(laby, resultat, dejaCollecte, x, y);
                     }
                 }
                 break;
@@ -43,17 +48,17 @@ class MoteurSimulation {
                     int[] p1 = deplacerSimple(laby, x, y, action.getD1());
                     x = p1[0];
                     y = p1[1];
-                    ramasser(laby, resultat, x, y);
+                    ramasser(laby, resultat, dejaCollecte, x, y);
 
                     int[] p2 = deplacerSimple(laby, x, y, action.getD2());
                     x = p2[0];
                     y = p2[1];
-                    ramasser(laby, resultat, x, y);
+                    ramasser(laby, resultat, dejaCollecte, x, y);
 
                     int[] p3 = deplacerSimple(laby, x, y, action.getD3());
                     x = p3[0];
                     y = p3[1];
-                    ramasser(laby, resultat, x, y);
+                    ramasser(laby, resultat, dejaCollecte, x, y);
 
                     resultat.bonusTroisPasUtilise = 1;
                 }
@@ -84,9 +89,14 @@ class MoteurSimulation {
         return new int[]{nx, ny};
     }
 
-    private static void ramasser(Labyrinthe laby, ResultatSimulation resultat, int x, int y) {
+    private static void ramasser(Labyrinthe laby, ResultatSimulation resultat,
+                                 ResultatSimulation dejaCollecte, int x, int y) {
         // Ramassage des éléments sur la case
         CaseJeu c = laby.getCase(x, y);
+        int idx = laby.index(x, y);
+        if (dejaCollecte != null && dejaCollecte.aCollecte(idx)) {
+            return;
+        }
         if (c.getType() == CaseJeu.Type.MOULE) {
             resultat.points += c.getValeur();
         } else if (c.getType() == CaseJeu.Type.SAUT) {
@@ -96,7 +106,7 @@ class MoteurSimulation {
         } else {
             return;
         }
-        resultat.ajouterCaseCollectee(laby.index(x, y));
+        resultat.ajouterCaseCollectee(idx);
     }
 
     private static int[] delta(char dir) {

@@ -4,6 +4,14 @@ class Inventaire {
     private int bonusSaut;
     private int bonusTroisPas;
 
+    // Copie légère pour la simulation
+    Inventaire copie() {
+        Inventaire inv = new Inventaire();
+        inv.bonusSaut = bonusSaut;
+        inv.bonusTroisPas = bonusTroisPas;
+        return inv;
+    }
+
     int getBonusSaut() {
         return bonusSaut;
     }

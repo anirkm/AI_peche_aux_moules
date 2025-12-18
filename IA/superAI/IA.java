@@ -6,6 +6,7 @@ class IA {
     private static final double PENALITE_UTILISATION_SAUT = 8.0;
     private static final double PENALITE_UTILISATION_TROIS_PAS = 12.0;
     private static final double PENALITE_DISTANCE = 1.4;
+    private static final double COEFF_PROFONDEUR = 0.6;
 
     static Action choisirAction(EtatJeu etat, int idJoueur, Inventaire inventaire) {
         Labyrinthe laby = etat.getLabyrinthe();
@@ -21,13 +22,13 @@ class IA {
             ResultatSimulation sim = MoteurSimulation.appliquer(etat, joueur, inventaire, action);
             int[] dist = Distances.bfs(laby, sim.x, sim.y);
 
-            double futur = evaluerFutur(laby, dist, distAdversaires, sim);
-            double score = sim.points
-                + VALEUR_SAUT * sim.bonusSautGagne
-                + VALEUR_TROIS_PAS * sim.bonusTroisPasGagne
-                - PENALITE_UTILISATION_SAUT * sim.bonusSautUtilise
-                - PENALITE_UTILISATION_TROIS_PAS * sim.bonusTroisPasUtilise
-                + futur;
+            double score = scoreSimulation(laby, dist, distAdversaires, sim, null);
+
+            // Petit coup d'avance
+            Inventaire invApres = inventaire.copie();
+            invApres.appliquer(sim);
+            double suite = meilleurApres(etat, idJoueur, sim, invApres, distAdversaires);
+            score += COEFF_PROFONDEUR * suite;
 
             if (score > meilleurScore) {
                 meilleurScore = score;
@@ -72,14 +73,45 @@ class IA {
         return actions;
     }
 
+    private static double meilleurApres(EtatJeu etat, int idJoueur, ResultatSimulation sim1,
+                                        Inventaire inventaire, int[] distAdversaires) {
+        Labyrinthe laby = etat.getLabyrinthe();
+        Joueur joueur = new Joueur(idJoueur, sim1.x, sim1.y);
+        double meilleur = -1e18;
+
+        for (Action action : actionsPossibles(inventaire)) {
+            ResultatSimulation sim2 = MoteurSimulation.appliquer(etat, joueur, inventaire, action, sim1);
+            int[] dist = Distances.bfs(laby, sim2.x, sim2.y);
+            double score = scoreSimulation(laby, dist, distAdversaires, sim2, sim1);
+            if (score > meilleur) {
+                meilleur = score;
+            }
+        }
+
+        return meilleur == -1e18 ? 0.0 : meilleur;
+    }
+
+    private static double scoreSimulation(Labyrinthe laby, int[] dist,
+                                          int[] distAdversaires, ResultatSimulation sim,
+                                          ResultatSimulation deja) {
+        double futur = evaluerFutur(laby, dist, distAdversaires, sim, deja);
+        return sim.points
+            + VALEUR_SAUT * sim.bonusSautGagne
+            + VALEUR_TROIS_PAS * sim.bonusTroisPasGagne
+            - PENALITE_UTILISATION_SAUT * sim.bonusSautUtilise
+            - PENALITE_UTILISATION_TROIS_PAS * sim.bonusTroisPasUtilise
+            + futur;
+    }
+
     private static double evaluerFutur(Labyrinthe laby, int[] dist,
-                                       int[] distAdversaires, ResultatSimulation sim) {
+                                       int[] distAdversaires, ResultatSimulation sim,
+                                       ResultatSimulation deja) {
         double meilleur = -1e18;
 
         for (int y = 0; y < laby.getHauteur(); y++) {
             for (int x = 0; x < laby.getLargeur(); x++) {
                 int idx = laby.index(x, y);
-                if (sim.aCollecte(idx)) {
+                if (estCollecte(sim, deja, idx)) {
                     continue;
                 }
 
@@ -111,6 +143,13 @@ class IA {
         }
 
         return meilleur == -1e18 ? 0.0 : meilleur;
+    }
+
+    private static boolean estCollecte(ResultatSimulation sim, ResultatSimulation deja, int idx) {
+        if (sim != null && sim.aCollecte(idx)) {
+            return true;
+        }
+        return deja != null && deja.aCollecte(idx);
     }
 
     private static double estimationContest(int dMoi, int dOpp) {

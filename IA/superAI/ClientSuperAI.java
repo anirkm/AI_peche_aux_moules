@@ -44,7 +44,7 @@ public class ClientSuperAI {
 
                 // Décodage de l'état du jeu
                 EtatJeu etat = EtatJeu.depuisMessage(message);
-                // Choix du coup (placeholder pour l'instant)
+                // Choix du coup
                 Action action = choisirCoup(etat, idJoueur, inventaire);
 
                 // Mise à jour locale de l'inventaire

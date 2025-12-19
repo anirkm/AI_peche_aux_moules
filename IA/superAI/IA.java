@@ -1,7 +1,7 @@
 package superAI;
 
 class IA {
-    static Action choisirAction(EtatJeu etat, int idJoueur, Inventaire inventaire, ParametresIA parametres) {
+    static DecisionIA choisirAction(EtatJeu etat, int idJoueur, Inventaire inventaire, ParametresIA parametres) {
         Labyrinthe laby = etat.getLabyrinthe();
         Joueur joueur = etat.getJoueur(idJoueur);
 
@@ -9,13 +9,27 @@ class IA {
         int[] distAdversaires = distancesAdversaires(etat, idJoueur);
 
         Action meilleure = Action.simple('C');
+        ResultatSimulation meilleurSim = null;
         double meilleurScore = -1e18;
+        Action meilleureMouv = null;
+        ResultatSimulation meilleurMouvSim = null;
+        double meilleurMouvScore = -1e18;
 
-        for (Action action : actionsPossibles(inventaire)) {
+        EvaluationAction[] top = new EvaluationAction[3];
+
+        for (Action action : actionsPossibles(laby, joueur, inventaire)) {
             ResultatSimulation sim = MoteurSimulation.appliquer(etat, joueur, inventaire, action);
             int[] dist = Distances.bfs(laby, sim.x, sim.y);
 
             double score = scoreSimulation(laby, dist, distAdversaires, sim, null, parametres);
+
+            // Évite les coups qui ne font rien
+            if (!sim.aBouge() && sim.points == 0 && sim.bonusSautGagne == 0 && sim.bonusTroisPasGagne == 0) {
+                score -= parametres.penaliteImmobile;
+                if (action.getType() == Action.Type.SIMPLE && action.getD1() == 'C') {
+                    score -= parametres.penaliteImmobile;
+                }
+            }
 
             // Petit coup d'avance
             Inventaire invApres = inventaire.copie();
@@ -23,33 +37,52 @@ class IA {
             double suite = meilleurApres(etat, idJoueur, sim, invApres, distAdversaires, parametres);
             score += parametres.coeffProfondeur * suite;
 
-            if (score > meilleurScore) {
+            enregistrerTop(top, action, score, sim);
+
+            if (score > meilleurScore || (Math.abs(score - meilleurScore) < 1e-9
+                && sim.aBouge() && (meilleurSim == null || !meilleurSim.aBouge()))) {
                 meilleurScore = score;
                 meilleure = action;
+                meilleurSim = sim;
+            }
+
+            if (sim.aBouge()) {
+                if (score > meilleurMouvScore) {
+                    meilleurMouvScore = score;
+                    meilleureMouv = action;
+                    meilleurMouvSim = sim;
+                }
             }
         }
 
-        return meilleure;
+        if (meilleurSim != null && !meilleurSim.aBouge() && meilleureMouv != null) {
+            return new DecisionIA(meilleureMouv, meilleurMouvSim, top);
+        }
+
+        return new DecisionIA(meilleure, meilleurSim, top);
     }
 
-    private static Action[] actionsPossibles(Inventaire inventaire) {
+    private static Action[] actionsPossibles(Labyrinthe laby, Joueur joueur, Inventaire inventaire) {
         int base = 5;
         int saut = inventaire.getBonusSaut() > 0 ? 4 : 0;
         int trois = inventaire.getBonusTroisPas() > 0 ? 64 : 0;
         Action[] actions = new Action[base + saut + trois];
         int idx = 0;
 
-        actions[idx++] = Action.simple('N');
-        actions[idx++] = Action.simple('S');
-        actions[idx++] = Action.simple('E');
-        actions[idx++] = Action.simple('O');
+        char[] simples = new char[]{'N', 'S', 'E', 'O'};
+        for (char dir : simples) {
+            if (deplacementValide(laby, joueur.getX(), joueur.getY(), dir)) {
+                actions[idx++] = Action.simple(dir);
+            }
+        }
         actions[idx++] = Action.simple('C');
 
         if (saut > 0) {
-            actions[idx++] = Action.saut('N');
-            actions[idx++] = Action.saut('S');
-            actions[idx++] = Action.saut('E');
-            actions[idx++] = Action.saut('O');
+            for (char dir : simples) {
+                if (sautValide(laby, joueur.getX(), joueur.getY(), dir)) {
+                    actions[idx++] = Action.saut(dir);
+                }
+            }
         }
 
         if (trois > 0) {
@@ -63,7 +96,34 @@ class IA {
             }
         }
 
-        return actions;
+        if (idx == 0) {
+            return new Action[]{Action.simple('C')};
+        }
+        if (idx == actions.length) {
+            return actions;
+        }
+        Action[] coupe = new Action[idx];
+        System.arraycopy(actions, 0, coupe, 0, idx);
+        return coupe;
+    }
+
+    private static void enregistrerTop(EvaluationAction[] top, Action action, double score, ResultatSimulation sim) {
+        EvaluationAction eval = new EvaluationAction(action, score, sim);
+
+        if (top[0] == null || score > top[0].score) {
+            top[2] = top[1];
+            top[1] = top[0];
+            top[0] = eval;
+            return;
+        }
+        if (top[1] == null || score > top[1].score) {
+            top[2] = top[1];
+            top[1] = eval;
+            return;
+        }
+        if (top[2] == null || score > top[2].score) {
+            top[2] = eval;
+        }
     }
 
     private static double meilleurApres(EtatJeu etat, int idJoueur, ResultatSimulation sim1,
@@ -72,7 +132,7 @@ class IA {
         Joueur joueur = new Joueur(idJoueur, sim1.x, sim1.y);
         double meilleur = -1e18;
 
-        for (Action action : actionsPossibles(inventaire)) {
+        for (Action action : actionsPossibles(laby, joueur, inventaire)) {
             ResultatSimulation sim2 = MoteurSimulation.appliquer(etat, joueur, inventaire, action, sim1);
             int[] dist = Distances.bfs(laby, sim2.x, sim2.y);
             double score = scoreSimulation(laby, dist, distAdversaires, sim2, sim1, parametres);
@@ -143,6 +203,38 @@ class IA {
             return true;
         }
         return deja != null && deja.aCollecte(idx);
+    }
+
+    private static boolean deplacementValide(Labyrinthe laby, int x, int y, char dir) {
+        int[] d = delta(dir);
+        int nx = x + d[0];
+        int ny = y + d[1];
+        return laby.dansBornes(nx, ny) && !laby.estMur(nx, ny);
+    }
+
+    private static boolean sautValide(Labyrinthe laby, int x, int y, char dir) {
+        int[] d = delta(dir);
+        int nx = x + d[0] * 2;
+        int ny = y + d[1] * 2;
+        if (laby.dansBornes(nx, ny) && !laby.estMur(nx, ny)) {
+            return true;
+        }
+        return deplacementValide(laby, x, y, dir);
+    }
+
+    private static int[] delta(char dir) {
+        switch (dir) {
+            case 'N':
+                return new int[]{0, -1};
+            case 'S':
+                return new int[]{0, 1};
+            case 'E':
+                return new int[]{1, 0};
+            case 'O':
+                return new int[]{-1, 0};
+            default:
+                return new int[]{0, 0};
+        }
     }
 
     private static double estimationContest(int dMoi, int dOpp) {

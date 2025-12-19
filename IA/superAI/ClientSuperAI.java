@@ -18,6 +18,7 @@ public class ClientSuperAI {
         int port = Integer.parseInt(args[1]);
         String nomEquipe = args[2];
         ParametresIA parametres = ParametresIA.depuisArgs(args, 3);
+        Journal journal = Journal.depuisArgs(args, 3);
 
         try {
             Socket socket = new Socket(adresse, port);
@@ -46,16 +47,19 @@ public class ClientSuperAI {
                 // Décodage de l'état du jeu
                 EtatJeu etat = EtatJeu.depuisMessage(message);
                 // Choix du coup
-                Action action = choisirCoup(etat, idJoueur, inventaire, parametres);
+                DecisionIA decision = choisirCoup(etat, idJoueur, inventaire, parametres);
+                Action action = decision.action;
 
                 // Mise à jour locale de l'inventaire
                 Joueur joueur = etat.getJoueur(idJoueur);
                 ResultatSimulation sim = MoteurSimulation.appliquer(etat, joueur, inventaire, action);
                 inventaire.appliquer(sim);
+                journal.noterTour(etat, joueur, action, sim, decision.topActions, message);
 
                 sortie.println(action.versCommande());
             }
 
+            journal.fermer();
             socket.close();
         } catch (Exception e) {
             System.err.println("Erreur: " + e.getMessage());
@@ -63,7 +67,7 @@ public class ClientSuperAI {
         }
     }
 
-    private static Action choisirCoup(EtatJeu etat, int idJoueur, Inventaire inventaire, ParametresIA parametres) {
+    private static DecisionIA choisirCoup(EtatJeu etat, int idJoueur, Inventaire inventaire, ParametresIA parametres) {
         // Décision basée sur la valeur, les distances et les bonus
         return IA.choisirAction(etat, idJoueur, inventaire, parametres);
     }

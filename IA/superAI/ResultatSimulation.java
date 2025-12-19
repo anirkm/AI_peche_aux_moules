@@ -3,6 +3,8 @@ package superAI;
 import java.util.Arrays;
 
 class ResultatSimulation {
+    final int departX;
+    final int departY;
     int x;
     int y;
     int points;
@@ -16,6 +18,8 @@ class ResultatSimulation {
     private int nbCollectees = 0;
 
     ResultatSimulation(int x, int y) {
+        this.departX = x;
+        this.departY = y;
         this.x = x;
         this.y = y;
     }
@@ -40,5 +44,9 @@ class ResultatSimulation {
             }
         }
         return false;
+    }
+
+    boolean aBouge() {
+        return departX != x || departY != y;
     }
 }

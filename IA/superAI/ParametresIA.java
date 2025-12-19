@@ -7,6 +7,7 @@ class ParametresIA {
     double penaliteUtilisationTroisPas = 12.0;
     double penaliteDistance = 1.4;
     double coeffProfondeur = 0.6;
+    double penaliteImmobile = 6.0;
 
     static ParametresIA depuisArgs(String[] args, int debut) {
         ParametresIA p = new ParametresIA();
@@ -41,6 +42,8 @@ class ParametresIA {
             p.penaliteDistance = d;
         } else if ("coeffProfondeur".equals(cle)) {
             p.coeffProfondeur = d;
+        } else if ("penaliteImmobile".equals(cle)) {
+            p.penaliteImmobile = d;
         }
     }
 }

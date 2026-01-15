@@ -1,0 +1,13 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs / resultats
+IA/superAI/logs/
+Serveur/logServeurLaby-*
+tools/results.csv
+
+# OS
+.DS_Store

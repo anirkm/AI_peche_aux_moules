@@ -58,4 +58,17 @@ class Action {
         }
         return "Bp-" + d1 + "-" + d2 + "-" + d3;
     }
+
+    char dernierMouvement() {
+        if (type == Type.TROIS_PAS) {
+            if (d3 != 'C') {
+                return d3;
+            }
+            if (d2 != 'C') {
+                return d2;
+            }
+            return d1;
+        }
+        return d1;
+    }
 }

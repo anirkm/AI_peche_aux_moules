@@ -24,21 +24,23 @@ class MoteurSimulation {
                 ramasser(laby, resultat, dejaCollecte, x, y);
                 break;
             case SAUT:
-                // Bonus saut : 2 cases si la cible est valide
+                // Bonus saut : la règle serveur ne consomme le bonus que si la case à +2 est valide.
                 if (inventaire.getBonusSaut() > 0) {
                     int[] delta = delta(action.getD1());
                     int nx = x + delta[0] * 2;
                     int ny = y + delta[1] * 2;
-                    if (laby.dansBornes(nx, ny) && !laby.estMur(nx, ny)) {
-                        x = nx;
-                        y = ny;
-                        ramasser(laby, resultat, dejaCollecte, x, y);
-                        resultat.bonusSautUtilise = 1;
-                    } else {
-                        int[] fallback = deplacerSimple(laby, x, y, action.getD1());
-                        x = fallback[0];
-                        y = fallback[1];
-                        ramasser(laby, resultat, dejaCollecte, x, y);
+                    if (laby.dansBornes(nx, ny)) {
+                        if (!laby.estMur(nx, ny)) {
+                            x = nx;
+                            y = ny;
+                            ramasser(laby, resultat, dejaCollecte, x, y);
+                            resultat.bonusSautUtilise = 1;
+                        } else {
+                            int[] fallback = deplacerSimple(laby, x, y, action.getD1());
+                            x = fallback[0];
+                            y = fallback[1];
+                            ramasser(laby, resultat, dejaCollecte, x, y);
+                        }
                     }
                 }
                 break;
@@ -94,7 +96,7 @@ class MoteurSimulation {
         // Ramassage des éléments sur la case
         CaseJeu c = laby.getCase(x, y);
         int idx = laby.index(x, y);
-        if (dejaCollecte != null && dejaCollecte.aCollecte(idx)) {
+        if ((dejaCollecte != null && dejaCollecte.aCollecte(idx)) || resultat.aCollecte(idx)) {
             return;
         }
         if (c.getType() == CaseJeu.Type.MOULE) {

@@ -1,21 +1,105 @@
-Auteur : Rémi Synave - remi.synave@univ-littoral.fr
+# AI Pêche aux Moules
 
-Ça a été fait un peu à l'arrach' mais ça tourne :-)
+Projet de jeu + IA (client **superAI**) avec documentation utilisateur et technique.
 
-Si vous avez des remarques sur le code, des retours, besoin d'explications, n'hésitez pas à me contacter par mail.
+## Auteurs
 
-Pour faire fonctionner ce serveur, vous aurez besoin de la bibliothèque MG2D disponible ici : https://github.com/synave/MG2D
+- Jeu / serveur : Rémi Synave
+- IA / documentation : KARAMI Anir
 
-Pour compiler :
+## Le jeu (résumé détaillé)
+
+L'IA pilote un joueur dans un **labyrinthe fermé** (murs tout autour). Le terrain est composé de :
+
+- `Mu` : mur (infranchissable)
+- `So` : sol (case vide)
+- `Bs` : bonus saut (frites)
+- `Bp` : bonus trois pas (bières)
+- `Nombre` : moule (points)
+
+Les coordonnées sont en **(x,y)** avec l'origine en haut‑gauche (x vers la droite, y vers le bas).
+Les indices commencent à 0.
+
+### Bonus
+
+- **Bs (saut)** : avance de deux cases dans une direction, même si un mur est entre les deux.
+  La case d'arrivée doit être marchable. Si elle ne l'est pas, l'action tente un pas simple.
+- **Bp (trois pas)** : enchaîne trois déplacements dans le même tour.
+  Les pas invalides sont ignorés, les pas valides sont exécutés.
+
+### Multijoueur
+
+Plusieurs IA peuvent jouer simultanément. Les joueurs peuvent se croiser ou partager une case.
+La concurrence influence fortement la stratégie (cibles contestées).
+
+### Fin de partie
+
+La partie se termine quand :
+
+- toutes les moules sont ramassées,
+- la limite de tours est atteinte,
+- tous les joueurs passent leur tour.
+
+## Documentation
+
+- En ligne : https://anirkm.github.io/AI_peche_aux_moules/
+- Locale :
+
+```bash
+python3 -m pip install -r requirements.txt
+mkdocs serve
+```
+
+## Démarrage rapide
+
+Serveur (1 joueur) :
+
+```bash
 cd Serveur
-javac ServeurIA.java
+javac PecheAuxMoulesBoucle.java
+java PecheAuxMoulesBoucle -nbJoueur 1 -delay 0 -timeout 3000
+```
 
-Pour lancer le serveur par défaut :
-java ServeurIA
+Client IA :
 
-Si vous voulez avoir accès à toutes les options :
-java ServeurIA help
+```bash
+javac -d IA IA/superAI/*.java
+java -cp IA superAI.ClientSuperAI 127.0.0.1 1337 MonEquipe
+```
 
-ou en fait n'importe quoi à la place de "help" car ça ne reconnaîtra pas l'option et affichera l'aide !
+## Lancer une partie reproductible (seeds fixes)
 
-Si vous trouvez un bug, merci de le corriger avant de me contacter :-D :-D :-D
+```bash
+java PecheAuxMoulesBoucle -nbJoueur 1 -delay 0 -timeout 3000 \
+  -numLaby 49811 -numPlacementBonus 52567
+```
+
+## Logs
+
+Activer un log client :
+
+```bash
+java -cp IA superAI.ClientSuperAI 127.0.0.1 1337 MonEquipe \
+  log logFichier=IA/superAI/logs/test.txt
+```
+
+Analyser :
+
+```bash
+python3 tools/analyse_logs.py IA/superAI/logs/test.txt
+```
+
+## Tests automatisés
+
+```bash
+AUTO_SERVER=1 ./tools/run_tests.sh 127.0.0.1 1337 MonEquipe tools/seeds.txt
+```
+
+## Dépendances
+
+- Java JDK (8+ conseillé)
+- MG2D (serveur) : https://github.com/synave/MG2D
+
+## Licence
+
+Voir `LICENSE`.

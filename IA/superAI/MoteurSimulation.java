@@ -1,5 +1,9 @@
 package superAI;
 
+/**
+ * Simulateur local des actions.
+ * Applique les règles serveur sans modifier l'état global.
+ */
 class MoteurSimulation {
     static ResultatSimulation appliquer(EtatJeu etat, Joueur joueur, Inventaire inventaire, Action action) {
         return appliquer(etat, joueur, inventaire, action, null);
@@ -7,6 +11,7 @@ class MoteurSimulation {
 
     static ResultatSimulation appliquer(EtatJeu etat, Joueur joueur, Inventaire inventaire,
                                         Action action, ResultatSimulation dejaCollecte) {
+        // dejaCollecte permet d'éviter de compter deux fois la même case sur une séquence
         Labyrinthe laby = etat.getLabyrinthe();
 
         int x = joueur.getX();
@@ -31,11 +36,13 @@ class MoteurSimulation {
                     int ny = y + delta[1] * 2;
                     if (laby.dansBornes(nx, ny)) {
                         if (!laby.estMur(nx, ny)) {
+                            // Saut réussi => bonus consommé
                             x = nx;
                             y = ny;
                             ramasser(laby, resultat, dejaCollecte, x, y);
                             resultat.bonusSautUtilise = 1;
                         } else {
+                            // Mur à +2 : fallback à un pas simple si possible
                             int[] fallback = deplacerSimple(laby, x, y, action.getD1());
                             x = fallback[0];
                             y = fallback[1];
@@ -47,6 +54,7 @@ class MoteurSimulation {
             case TROIS_PAS:
                 // Bonus 3 pas : trois déplacements simples
                 if (inventaire.getBonusTroisPas() > 0) {
+                    // Les pas invalides n'annulent pas les suivants
                     int[] p1 = deplacerSimple(laby, x, y, action.getD1());
                     x = p1[0];
                     y = p1[1];
@@ -112,6 +120,7 @@ class MoteurSimulation {
     }
 
     private static int[] delta(char dir) {
+        // Conversion direction -> vecteur (dx, dy)
         switch (dir) {
             case 'N':
                 return new int[]{0, -1};

@@ -40,6 +40,77 @@ La partie se termine quand :
 - la limite de tours est atteinte,
 - tous les joueurs passent leur tour.
 
+## Technique IA (résumé)
+
+L'IA repose sur une **recherche locale heuristique**. L'idée est simple : on calcule des
+distances exactes, puis on choisit l'action qui maximise un score (points + futur proche),
+tout en évitant les boucles.
+
+### 1) Distances exactes (BFS)
+
+- **Parcours en largeur (BFS)** : calcule la distance minimale en nombre de tours vers
+  toutes les cases (coût uniforme = 1 par tour).
+- **BFS multi‑états** : pour tenir compte des bonus, l'état devient :
+  `(case, nbSautRestant, nbTroisPasRestant)`.  
+  On obtient ainsi une distance réaliste quand on consomme un saut ou un trois‑pas.
+
+Justification : le BFS est optimal sur un graphe non pondéré (coût par action = 1 tour).
+Quand on ajoute les bonus, on étend l'espace d'états ; chaque transition coûte encore 1,
+donc le BFS reste optimal et fournit **la distance minimale en tours**.
+
+### 2) Évaluation heuristique des actions
+
+Pour chaque action possible, on simule localement puis on calcule un score :
+
+```
+score = points_gagnés
+      + valeurSaut * bonusSaut_gagné
+      + valeurTroisPas * bonusTroisPas_gagné
+      - penaliteUtilisationSaut * bonusSaut_utilisé
+      - penaliteUtilisationTroisPas * bonusTroisPas_utilisé
+      + futur
+```
+
+Le terme **futur** correspond à la meilleure cible restante, pondérée par :
+la distance, la valeur et la concurrence (si un adversaire est plus proche).
+
+Mathématiquement, on approxime la valeur d'une cible `c` par :
+
+```
+V(c) = valeur(c) * contest(d_moi, d_adv) - penaliteDistance * d_moi
+```
+
+où `contest` diminue si un adversaire est plus proche (ex: 1, 0.5, 0.25, 0).
+Cette pondération représente une **espérance de gain** sous concurrence.
+
+### 3) Mémoire & anti‑boucle
+
+Pour éviter les zigzags :
+
+- **Mémoire de positions** : pénalise les retours récents.
+- **Verrouillage de cible** : on garde une cible quelques tours avant de changer.
+- **Pénalités** : demi‑tours, cycles courts, immobilité.
+
+### 4) Lookahead court + plan local
+
+- **Lookahead** : on regarde un coup d'avance (profondeur 2) pour limiter le côté “greedy”.
+- **Plan local Top‑K** : on teste une petite séquence de cibles (top‑K) et on choisit
+  la première cible de la meilleure séquence.
+
+Justification : un lookahead court réduit les erreurs myopes sans exploser le temps de calcul.
+Le Top‑K limite la combinatoire : on approxime la recherche exhaustive par un sous‑ensemble
+des cibles les plus prometteuses.
+
+### 5) Mode hybride (vitesse vs score)
+
+Si l'IA stagne ou s'il reste très peu de moules, elle privilégie la **distance**
+pour terminer plus vite. Les bonus ne sont consommés que si le gain en tours
+est suffisant.
+
+Cette approche donne un bon compromis entre **performance**, **qualité de décision**
+et **temps de calcul**.
+
+
 ## Documentation
 
 - En ligne : https://anirkm.github.io/AI_peche_aux_moules/

@@ -1,5 +1,9 @@
 package superAI;
 
+/**
+ * Données minimales d'un joueur côté client.
+ * Le serveur ne fournit que position + id.
+ */
 class Joueur {
     private final int id;
     private int x;

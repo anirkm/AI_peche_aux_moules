@@ -1,5 +1,9 @@
 package superAI;
 
+/**
+ * Etat complet reçu du serveur à chaque tour.
+ * Contient le labyrinthe et la liste des joueurs.
+ */
 class EtatJeu {
     private final Labyrinthe labyrinthe;
     private final Joueur[] joueurs;
@@ -24,7 +28,7 @@ class EtatJeu {
         int largeur = Integer.parseInt(taille[0]);
         int hauteur = Integer.parseInt(taille[1]);
 
-        // Structure des cases
+        // Structure des cases : largeur*hauteur tokens séparés par "-"
         String[] cases = parties[1].split("-");
         if (cases.length != largeur * hauteur) {
             throw new IllegalArgumentException("Structure invalide: " + cases.length);
@@ -36,6 +40,7 @@ class EtatJeu {
         int nbJoueurs = Integer.parseInt(joueurs[0]);
         Joueur[] liste = new Joueur[nbJoueurs];
         for (int i = 0; i < nbJoueurs; i++) {
+            // Format : "x,y"
             String[] pos = joueurs[i + 1].split(",");
             int x = Integer.parseInt(pos[0]);
             int y = Integer.parseInt(pos[1]);

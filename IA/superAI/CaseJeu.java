@@ -1,5 +1,9 @@
 package superAI;
 
+/**
+ * Case du labyrinthe.
+ * type = mur, sol, bonus ou moule ; valeur utile seulement pour les moules.
+ */
 class CaseJeu {
     enum Type {
         MUR,

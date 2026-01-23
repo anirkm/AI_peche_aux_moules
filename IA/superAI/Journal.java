@@ -6,6 +6,10 @@ import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Journal optionnel pour tracer les tours côté client.
+ * Utile pour le debug et l'analyse des décisions.
+ */
 class Journal {
     private final boolean actif;
     private final boolean brut;
@@ -20,6 +24,7 @@ class Journal {
     }
 
     static Journal depuisArgs(String[] args, int debut) {
+        // Active le journal si "log" est présent dans les options
         boolean actif = false;
         boolean brut = false;
         String fichier = null;
@@ -70,6 +75,7 @@ class Journal {
             int nbSaut = compter(laby, CaseJeu.Type.SAUT);
             int nbTrois = compter(laby, CaseJeu.Type.TROIS_PAS);
 
+            // Format stable pour l'analyse automatique (tools/analyse_logs.py)
             sortie.write("Tour " + tour + "\n");
             sortie.write("Position: (" + joueur.getX() + "," + joueur.getY() + ")\n");
             sortie.write("Action: " + action.versCommande() + "\n");
@@ -84,6 +90,7 @@ class Journal {
                     if (ev == null) {
                         continue;
                     }
+                    // Top 3 actions pour comprendre la décision
                     sortie.write("Top " + (i + 1) + ": " + ev.action.versCommande()
                         + " score=" + formater(ev.score)
                         + " arrivee=(" + ev.simulation.x + "," + ev.simulation.y + ")"

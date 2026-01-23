@@ -1,5 +1,12 @@
 package superAI;
 
+/**
+ * Action envoyée au serveur (déplacement simple ou bonus).
+ * Format protocole :
+ *  - SIMPLE : "N", "S", "E", "O", "C"
+ *  - SAUT   : "Bs-D"
+ *  - TROIS  : "Bp-D1-D2-D3"
+ */
 class Action {
     enum Type {
         SIMPLE,
@@ -29,6 +36,7 @@ class Action {
     }
 
     static Action troisPas(char d1, char d2, char d3) {
+        // Les directions non utilisées sont laissées à 'C'
         return new Action(Type.TROIS_PAS, d1, d2, d3);
     }
 
@@ -60,6 +68,7 @@ class Action {
     }
 
     char dernierMouvement() {
+        // Sert à pénaliser les demi-tours
         if (type == Type.TROIS_PAS) {
             if (d3 != 'C') {
                 return d3;

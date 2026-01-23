@@ -6,6 +6,13 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * Client réseau principal.
+ * - se connecte au serveur,
+ * - lit l'état du jeu,
+ * - choisit un coup via l'IA,
+ * - envoie la commande.
+ */
 public class ClientSuperAI {
     public static void main(String[] args) {
         if (args.length == 0 || "-h".equals(args[0]) || "--help".equals(args[0])) {
@@ -26,6 +33,7 @@ public class ClientSuperAI {
         Journal journal = Journal.depuisArgs(args, 3);
 
         try {
+            // Ouverture de la socket TCP
             Socket socket = new Socket(adresse, port);
             BufferedReader entree = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter sortie = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
@@ -41,6 +49,7 @@ public class ClientSuperAI {
             // Numéro de joueur envoyé par le serveur
             int idJoueur = Integer.parseInt(ligne.trim());
 
+            // Mémoire locale : bonus, dernier mouvement, positions récentes
             Inventaire inventaire = new Inventaire();
             char dernierMouvement = 'C';
             MemoirePositions memoire = new MemoirePositions(6);
@@ -55,7 +64,7 @@ public class ClientSuperAI {
 
                 // Décodage de l'état du jeu
                 EtatJeu etat = EtatJeu.depuisMessage(message);
-                // Choix du coup
+                // Choix du coup (cœur IA)
                 DecisionIA decision = choisirCoup(etat, idJoueur, inventaire, parametres, dernierMouvement,
                     memoire, memoireCible, toursSansPoints);
                 Action action = decision.action;
@@ -73,6 +82,7 @@ public class ClientSuperAI {
                     toursSansPoints++;
                 }
 
+                // Envoi de la commande au serveur
                 sortie.println(action.versCommande());
             }
 

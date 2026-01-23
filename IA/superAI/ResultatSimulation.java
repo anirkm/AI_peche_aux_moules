@@ -2,6 +2,10 @@ package superAI;
 
 import java.util.Arrays;
 
+/**
+ * Résultat d'une action simulée :
+ * position finale, points, bonus gagnés/consommés, cases collectées.
+ */
 class ResultatSimulation {
     final int departX;
     final int departY;
@@ -31,6 +35,7 @@ class ResultatSimulation {
                 return;
             }
         }
+        // Agrandit le tableau si nécessaire
         if (nbCollectees >= collectees.length) {
             collectees = Arrays.copyOf(collectees, collectees.length + 8);
         }

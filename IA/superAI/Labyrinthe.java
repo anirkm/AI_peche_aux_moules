@@ -1,5 +1,9 @@
 package superAI;
 
+/**
+ * Grille du jeu.
+ * Stocke la taille et la liste linéaire des cases.
+ */
 class Labyrinthe {
     private final int largeur;
     private final int hauteur;
@@ -12,9 +16,11 @@ class Labyrinthe {
     }
 
     static Labyrinthe depuisTokens(int largeur, int hauteur, String[] tokens) {
+        // Transforme la chaîne de tokens en cases du labyrinthe
         CaseJeu[] cases = new CaseJeu[tokens.length];
         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
+            // Mapping direct du protocole -> type interne
             if ("Mu".equals(token)) {
                 cases[i] = new CaseJeu(CaseJeu.Type.MUR, 0);
             } else if ("So".equals(token)) {
@@ -24,6 +30,7 @@ class Labyrinthe {
             } else if ("Bp".equals(token)) {
                 cases[i] = new CaseJeu(CaseJeu.Type.TROIS_PAS, 0);
             } else {
+                // Sinon : c'est une moule avec sa valeur en points
                 cases[i] = new CaseJeu(CaseJeu.Type.MOULE, Integer.parseInt(token));
             }
         }
@@ -39,6 +46,7 @@ class Labyrinthe {
     }
 
     int index(int x, int y) {
+        // Conversion (x,y) -> index linéaire
         return y * largeur + x;
     }
 

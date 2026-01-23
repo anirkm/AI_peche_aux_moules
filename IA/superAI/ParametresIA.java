@@ -1,41 +1,57 @@
 package superAI;
 
+/**
+ * Paramètres de l'IA (valeurs par défaut + parsing CLI).
+ * Les clés sont passées en ligne de commande sous la forme cle=valeur.
+ * Valeurs par défaut calibrées sur le preset G1.
+ */
 class ParametresIA {
+    // Valeurs : importance relative des bonus ramassés
     double valeurSaut = 25.0;
     double valeurTroisPas = 35.0;
+    // Coûts : évitent de consommer un bonus pour un petit gain
     double penaliteUtilisationSaut = 10.0;
     double penaliteUtilisationTroisPas = 14.0;
+    // Coûts de distance et de comportement
     double penaliteDistance = 1.6;
     double coeffProfondeur = 0.7;
     double penaliteImmobile = 6.0;
     double penaliteRetour = 3.5;
     double penaliteBoucle = 7.0;
+    // Mémoire de cible (anti-zigzag)
     int verrouillageCible = 4;
     double seuilChangementCible = 1.3;
+    // Modes de décision
     int modeHybride = 1;
     int modeCompromis = 1;
     double margeCompromis = 0.15;
     double margeCompromisFin = 0.05;
+    // Planification locale (top-K)
     int modePlan = 1;
     int nbCiblesPlan = 8;
     int profondeurPlan = 4;
+    // Accélération (quand on stagne ou en fin de partie)
     int seuilAcceleration = 12;
     int seuilRarete = 3;
     int toursSansPointsMax = 12;
+    // Seuils d'usage des bonus
     int gainDistanceBonusMin = 3;
     int gainDistanceBonusMinAccel = 2;
 
     static ParametresIA depuisArgs(String[] args, int debut) {
+        // Parse les options après les 3 premiers arguments (ip, port, équipe)
         ParametresIA p = new ParametresIA();
         for (int i = debut; i < args.length; i++) {
             String token = args[i];
             int eq = token.indexOf('=');
+            // On ignore les tokens sans '='
             if (eq <= 0 || eq == token.length() - 1) {
                 continue;
             }
             String cle = token.substring(0, eq);
             String val = token.substring(eq + 1);
             try {
+                // Toutes les valeurs sont lues comme double puis converties si besoin
                 double d = Double.parseDouble(val);
                 appliquer(p, cle, d);
             } catch (NumberFormatException ignored) {
@@ -46,6 +62,8 @@ class ParametresIA {
     }
 
     private static void appliquer(ParametresIA p, String cle, double d) {
+        // Mappage des clés CLI -> champs internes
+        // La liste ci-dessous correspond aux clés visibles dans l'aide (-h)
         if ("valeurSaut".equals(cle)) {
             p.valeurSaut = d;
         } else if ("valeurTroisPas".equals(cle)) {

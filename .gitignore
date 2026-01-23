@@ -8,6 +8,8 @@
 IA/superAI/logs/
 Serveur/logServeurLaby-*
 tools/results.csv
+site/
+Serveur/
 
 # OS
 .DS_Store

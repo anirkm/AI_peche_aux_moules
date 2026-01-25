@@ -17,7 +17,7 @@ AUTO_SERVER=1 ./tools/run_tests.sh 127.0.0.1 1337 MonEquipe tools/seeds.txt
 Le script :
 
 - compile l'IA,
-- lance plusieurs presets,
+- lance plusieurs presets (G1B0, G1B0P, G1AUTO),
 - analyse les logs,
 - produit un classement,
 - calcule des moyennes normalisées par seed.
@@ -47,11 +47,12 @@ Le script :
 
 ```
 === Classement (tours asc, points desc) ===
-testB.txt: 83 tours, 620 pts
-testE.txt: 83 tours, 620 pts
+testG1B0.txt: 83 tours, 620 pts
+testG1AUTO.txt: 90 tours, 620 pts
 ...
 === Moyennes (tours asc sur seeds complets, ratio points desc) ===
-G1: 104.23 tours, ratio points 1.000, wins 14, runs 30/30
+G1B0: 104.23 tours, ratio points 1.000, wins 14, runs 30/30
+G1B0P: 105.10 tours, ratio points 1.000, wins 10, runs 30/30
 ```
 
 ## Comprendre "wins"

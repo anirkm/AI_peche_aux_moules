@@ -6,6 +6,9 @@
 │  └─ superAI/
 │     ├─ ClientSuperAI.java
 │     ├─ IA.java
+│     ├─ IAActions.java
+│     ├─ IACibles.java
+│     ├─ IABeam.java
 │     ├─ Distances.java
 │     ├─ MoteurSimulation.java
 │     ├─ Journal.java
@@ -28,7 +31,10 @@
 ## IA/superAI (client)
 
 - **ClientSuperAI** : client TCP (lecture -> décision -> envoi).
-- **IA** : cœur de la décision (score, cible, pénalités).
+- **IA** : orchestration générale de la décision.
+- **IAActions** : génération d’actions + scoring + pénalités.
+- **IACibles** : choix de cibles + adversaires + concurrence.
+- **IABeam** : recherche par faisceau (optionnelle).
 - **Distances** : BFS classique + BFS avec bonus (saut / 3 pas).
 - **MoteurSimulation** : applique une action localement.
 - **ParametresIA** : valeurs par défaut et parsing CLI.

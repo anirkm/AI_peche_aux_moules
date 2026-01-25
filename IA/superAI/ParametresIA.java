@@ -3,7 +3,7 @@ package superAI;
 /**
  * Paramètres de l'IA (valeurs par défaut + parsing CLI).
  * Les clés sont passées en ligne de commande sous la forme cle=valeur.
- * Valeurs par défaut calibrées sur le preset G1.
+ * Valeurs par défaut calibrées sur le preset G1B0.
  */
 class ParametresIA {
     // Valeurs : importance relative des bonus ramassés
@@ -18,6 +18,11 @@ class ParametresIA {
     double penaliteImmobile = 6.0;
     double penaliteRetour = 3.5;
     double penaliteBoucle = 7.0;
+    // Adversaires / carte de valeur (optionnels)
+    double penaliteCibleAdverse = 0.0;
+    double coeffCarteValeur = 0.0;
+    // Bonus efficaces (récompense si gain réel)
+    double bonusUsageEfficace = 0.0;
     // Mémoire de cible (anti-zigzag)
     int verrouillageCible = 4;
     double seuilChangementCible = 1.3;
@@ -30,6 +35,15 @@ class ParametresIA {
     int modePlan = 1;
     int nbCiblesPlan = 8;
     int profondeurPlan = 4;
+    // Recherche par faisceau (séquences d'actions)
+    // 0 = off, 1 = on, 2 = auto
+    int modeBeam = 0;
+    int largeurBeam = 12;
+    int profondeurBeam = 3;
+    // Auto-beam : seuils de complexité
+    double beamAutoMur = 0.45;
+    int beamAutoMinMoules = 8;
+    int beamAutoMinCases = 300;
     // Accélération (quand on stagne ou en fin de partie)
     int seuilAcceleration = 12;
     int seuilRarete = 3;
@@ -82,6 +96,12 @@ class ParametresIA {
             p.penaliteRetour = d;
         } else if ("penaliteBoucle".equals(cle)) {
             p.penaliteBoucle = d;
+        } else if ("penaliteCibleAdverse".equals(cle)) {
+            p.penaliteCibleAdverse = d;
+        } else if ("coeffCarteValeur".equals(cle)) {
+            p.coeffCarteValeur = d;
+        } else if ("bonusUsageEfficace".equals(cle)) {
+            p.bonusUsageEfficace = d;
         } else if ("verrouillageCible".equals(cle)) {
             p.verrouillageCible = (int) d;
         } else if ("seuilChangementCible".equals(cle)) {
@@ -100,6 +120,18 @@ class ParametresIA {
             p.nbCiblesPlan = (int) d;
         } else if ("profondeurPlan".equals(cle)) {
             p.profondeurPlan = (int) d;
+        } else if ("modeBeam".equals(cle)) {
+            p.modeBeam = (int) d;
+        } else if ("largeurBeam".equals(cle)) {
+            p.largeurBeam = (int) d;
+        } else if ("profondeurBeam".equals(cle)) {
+            p.profondeurBeam = (int) d;
+        } else if ("beamAutoMur".equals(cle)) {
+            p.beamAutoMur = d;
+        } else if ("beamAutoMinMoules".equals(cle)) {
+            p.beamAutoMinMoules = (int) d;
+        } else if ("beamAutoMinCases".equals(cle)) {
+            p.beamAutoMinCases = (int) d;
         } else if ("seuilAcceleration".equals(cle)) {
             p.seuilAcceleration = (int) d;
         } else if ("seuilRarete".equals(cle)) {

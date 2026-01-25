@@ -15,6 +15,9 @@ Tous les paramètres sont optionnels. Format : `cle=valeur`.
 | `penaliteImmobile` | 6.0 | Pénalise les tours immobiles. |
 | `penaliteRetour` | 3.5 | Pénalise les demi‑tours. |
 | `penaliteBoucle` | 7.0 | Pénalise les cycles courts. |
+| `penaliteCibleAdverse` | 0.0 | Évite de courir vers une cible déjà “prise”. |
+| `coeffCarteValeur` | 0.0 | Poids du champ de valeur global. |
+| `bonusUsageEfficace` | 0.0 | Bonus si un usage de bonus est vraiment rentable. |
 | `verrouillageCible` | 4 | Nombre de tours avant relâche de la cible. |
 | `seuilChangementCible` | 1.3 | Ratio pour forcer un changement de cible. |
 | `modeHybride` | 1 | Active le mode hybride. |
@@ -24,6 +27,12 @@ Tous les paramètres sont optionnels. Format : `cle=valeur`.
 | `modePlan` | 1 | Active la planification locale. |
 | `nbCiblesPlan` | 8 | Taille du pool de cibles. |
 | `profondeurPlan` | 4 | Longueur du plan local. |
+| `modeBeam` | 0 | Faisceau : 0=off, 1=on, 2=auto. |
+| `largeurBeam` | 12 | Largeur du faisceau. |
+| `profondeurBeam` | 3 | Profondeur du faisceau. |
+| `beamAutoMur` | 0.45 | Active le beam si le taux de murs est élevé. |
+| `beamAutoMinMoules` | 8 | Active le beam si beaucoup de moules restent. |
+| `beamAutoMinCases` | 300 | Active le beam si la grille est grande. |
 | `seuilAcceleration` | 12 | Tours sans points avant accélération. |
 | `seuilRarete` | 3 | Seuil de moules restantes pour accélérer. |
 | `toursSansPointsMax` | 12 | Reset cible si stagnation. |
@@ -42,11 +51,13 @@ Tous les paramètres sont optionnels. Format : `cle=valeur`.
 
 - Augmente `penaliteBoucle` et `penaliteRetour` pour éviter les zigzags.
 - Augmente `verrouillageCible` pour rester sur la même cible plus longtemps.
+- `penaliteCibleAdverse` évite les courses perdues.
 
 ### Bonus
 
 - `gainDistanceBonusMin` contrôle quand consommer un bonus.
 - `penaliteUtilisationSaut` / `penaliteUtilisationTroisPas` évitent de gaspiller.
+- `bonusUsageEfficace` récompense un vrai gain en tours.
 
 ## Logs
 

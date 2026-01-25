@@ -25,9 +25,15 @@ run_preset() {
   echo "=== Lancement preset $name ==="
   local log_file="$LOG_DIR/test${name}.txt"
   rm -f "$log_file"
+  if [[ "${AUTO_SERVER:-0}" -eq 1 && -n "${CURRENT_SEED_LABY:-}" ]]; then
+    start_server "$CURRENT_SEED_LABY" "$CURRENT_SEED_BONUS"
+  fi
   java -cp "$ROOT/IA" superAI.ClientSuperAI "$IP" "$PORT" "$EQUIPE" log \
     "logFichier=$log_file" \
     "$@"
+  if [[ "${AUTO_SERVER:-0}" -eq 1 && -n "${CURRENT_SEED_LABY:-}" ]]; then
+    stop_server
+  fi
   if ! rg -q "^Tour " "$log_file" 2>/dev/null; then
     echo "Erreur: pas de tours ecrits pour le preset $name (serveur non joignable ?)"
     exit 1
@@ -85,139 +91,30 @@ wait_for_server() {
 }
 
 run_all_presets() {
-  # Preset A (hybride equilibre)
-  run_preset A \
-    modeHybride=1 seuilAcceleration=12 seuilRarete=3 \
-    penaliteDistance=1.4 coeffProfondeur=0.6 \
-    penaliteRetour=4 penaliteBoucle=8 \
-    verrouillageCible=4 seuilChangementCible=1.25 \
-    toursSansPointsMax=12 gainDistanceBonusMin=2 gainDistanceBonusMinAccel=1
-
-  # Preset B (hybride agressif/rapide)
-  run_preset B \
-    modeHybride=1 seuilAcceleration=8 seuilRarete=5 \
-    penaliteDistance=1.8 coeffProfondeur=0.4 \
-    penaliteRetour=6 penaliteBoucle=12 \
-    verrouillageCible=3 seuilChangementCible=1.15 \
-    toursSansPointsMax=8 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=1
-
-  # Preset C (hybride score/qualite)
-  run_preset C \
-    modeHybride=1 seuilAcceleration=18 seuilRarete=2 \
-    valeurSaut=45 valeurTroisPas=70 \
-    penaliteUtilisationSaut=6 penaliteUtilisationTroisPas=8 \
-    penaliteDistance=1.2 coeffProfondeur=0.8 \
-    verrouillageCible=6 seuilChangementCible=1.35 \
-    toursSansPointsMax=14 gainDistanceBonusMin=3 gainDistanceBonusMinAccel=2
-
-  # Preset D (sans hybride)
-  run_preset D \
-    modeHybride=0 \
-    penaliteDistance=1.4 coeffProfondeur=0.6 \
-    penaliteRetour=4 penaliteBoucle=8 \
-    verrouillageCible=4 seuilChangementCible=1.25 \
-    toursSansPointsMax=12 gainDistanceBonusMin=2 gainDistanceBonusMinAccel=1
-
-  # Preset E (acceleration tres tot)
-  run_preset E \
-    modeHybride=1 seuilAcceleration=6 seuilRarete=6 \
-    penaliteDistance=1.8 coeffProfondeur=0.5 \
-    penaliteRetour=6 penaliteBoucle=10 \
-    verrouillageCible=3 seuilChangementCible=1.2 \
-    toursSansPointsMax=6 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=0
-
-  # Preset F (bonus agressif)
-  run_preset F \
-    modeHybride=1 seuilAcceleration=10 seuilRarete=4 \
-    valeurSaut=55 valeurTroisPas=85 \
-    penaliteUtilisationSaut=2 penaliteUtilisationTroisPas=3 \
-    penaliteDistance=1.5 coeffProfondeur=0.5 \
-    verrouillageCible=3 seuilChangementCible=1.15 \
-    toursSansPointsMax=10 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=0
-
-  # Preset G (bonus parcimonieux)
-  run_preset G \
-    modeHybride=1 seuilAcceleration=12 seuilRarete=3 \
-    valeurSaut=25 valeurTroisPas=35 \
-    penaliteUtilisationSaut=10 penaliteUtilisationTroisPas=14 \
-    penaliteDistance=1.6 coeffProfondeur=0.6 \
-    verrouillageCible=4 seuilChangementCible=1.3 \
+  # Base G1B0 (preset par défaut)
+  local base_g1=(
+    modeHybride=1 seuilAcceleration=12 seuilRarete=3
+    valeurSaut=25 valeurTroisPas=35
+    penaliteUtilisationSaut=10 penaliteUtilisationTroisPas=14
+    penaliteDistance=1.6 coeffProfondeur=0.7
+    penaliteCibleAdverse=0.0 coeffCarteValeur=0.0 bonusUsageEfficace=0.0
+    verrouillageCible=4 seuilChangementCible=1.3
     toursSansPointsMax=12 gainDistanceBonusMin=3 gainDistanceBonusMinAccel=2
-
-  # Variantes autour de G
-  run_preset G1 \
-    modeHybride=1 seuilAcceleration=12 seuilRarete=3 \
-    valeurSaut=25 valeurTroisPas=35 \
-    penaliteUtilisationSaut=10 penaliteUtilisationTroisPas=14 \
-    penaliteDistance=1.6 coeffProfondeur=0.7 \
-    verrouillageCible=4 seuilChangementCible=1.3 \
-    toursSansPointsMax=12 gainDistanceBonusMin=3 gainDistanceBonusMinAccel=2 \
     modePlan=1 nbCiblesPlan=8 profondeurPlan=4
+    modeBeam=0 largeurBeam=12 profondeurBeam=3
+  )
 
-  run_preset G2 \
-    modeHybride=1 seuilAcceleration=12 seuilRarete=3 \
-    valeurSaut=25 valeurTroisPas=35 \
-    penaliteUtilisationSaut=8 penaliteUtilisationTroisPas=10 \
-    penaliteDistance=1.6 coeffProfondeur=0.6 \
-    verrouillageCible=4 seuilChangementCible=1.3 \
-    toursSansPointsMax=12 gainDistanceBonusMin=2 gainDistanceBonusMinAccel=1
+  # G1B0 de base
+  run_preset G1B0 "${base_g1[@]}"
 
-  run_preset G3 \
-    modeHybride=1 seuilAcceleration=10 seuilRarete=4 \
-    valeurSaut=25 valeurTroisPas=35 \
-    penaliteUtilisationSaut=10 penaliteUtilisationTroisPas=14 \
-    penaliteDistance=1.7 coeffProfondeur=0.6 \
-    verrouillageCible=3 seuilChangementCible=1.2 \
-    toursSansPointsMax=10 gainDistanceBonusMin=3 gainDistanceBonusMinAccel=2
+  # G1B0+ (poids plus forts pour adversaires/carte/bonus)
+  run_preset G1B0P "${base_g1[@]}" \
+    penaliteCibleAdverse=12 coeffCarteValeur=0.15 bonusUsageEfficace=4
 
-  run_preset G4 \
-    modeHybride=1 seuilAcceleration=12 seuilRarete=3 \
-    valeurSaut=25 valeurTroisPas=35 \
-    penaliteUtilisationSaut=10 penaliteUtilisationTroisPas=14 \
-    penaliteDistance=1.6 coeffProfondeur=0.6 \
-    verrouillageCible=4 seuilChangementCible=1.3 \
-    toursSansPointsMax=12 gainDistanceBonusMin=3 gainDistanceBonusMinAccel=2 \
-    modeCompromis=1 margeCompromis=0.10 margeCompromisFin=0.03
+  # G1AUTO (beam auto)
+  run_preset G1AUTO "${base_g1[@]}" modeBeam=2
 
-  # Preset H (autour de B/E - penaliteDistance + accel plus tot)
-  run_preset H \
-    modeHybride=1 seuilAcceleration=6 seuilRarete=6 \
-    penaliteDistance=2.1 coeffProfondeur=0.45 \
-    penaliteRetour=6 penaliteBoucle=10 \
-    verrouillageCible=2 seuilChangementCible=1.1 \
-    toursSansPointsMax=6 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=0
-
-  # Preset I (autour de B/E - accel tot + bonus mini)
-  run_preset I \
-    modeHybride=1 seuilAcceleration=5 seuilRarete=7 \
-    penaliteDistance=2.0 coeffProfondeur=0.4 \
-    penaliteRetour=6 penaliteBoucle=12 \
-    verrouillageCible=2 seuilChangementCible=1.1 \
-    toursSansPointsMax=5 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=0
-
-  # Preset J (autour de B/E - un peu plus stable)
-  run_preset J \
-    modeHybride=1 seuilAcceleration=7 seuilRarete=6 \
-    penaliteDistance=1.9 coeffProfondeur=0.45 \
-    penaliteRetour=6 penaliteBoucle=10 \
-    verrouillageCible=3 seuilChangementCible=1.15 \
-    toursSansPointsMax=7 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=0
-
-  # Preset K (autour de B/E - acceleration moderee)
-  run_preset K \
-    modeHybride=1 seuilAcceleration=8 seuilRarete=5 \
-    penaliteDistance=1.9 coeffProfondeur=0.5 \
-    penaliteRetour=5 penaliteBoucle=10 \
-    verrouillageCible=3 seuilChangementCible=1.15 \
-    toursSansPointsMax=8 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=0
-
-  # Preset L (autour de B/E - moins penaliteDistance)
-  run_preset L \
-    modeHybride=1 seuilAcceleration=6 seuilRarete=6 \
-    penaliteDistance=1.7 coeffProfondeur=0.45 \
-    penaliteRetour=6 penaliteBoucle=10 \
-    verrouillageCible=2 seuilChangementCible=1.1 \
-    toursSansPointsMax=6 gainDistanceBonusMin=1 gainDistanceBonusMinAccel=0
+  # (presets de beam profonds retirés pour garder un set court)
 }
 
 if [[ -z "$SEEDS_FILE" && -f "$ROOT/tools/seeds.txt" ]]; then
@@ -237,7 +134,8 @@ if [[ -n "$SEEDS_FILE" ]]; then
     rm -f "$LOG_DIR"/test*.txt
     echo "=== Seed ${seedId} ==="
     if [[ "$AUTO_SERVER" -eq 1 ]]; then
-      start_server "$seedLaby" "$seedBonus"
+      CURRENT_SEED_LABY="$seedLaby"
+      CURRENT_SEED_BONUS="$seedBonus"
     else
       echo "Lance le serveur avec : -numLaby ${seedLaby} -numPlacementBonus ${seedBonus}"
       echo "Puis appuie sur Entrée."
@@ -246,9 +144,6 @@ if [[ -n "$SEEDS_FILE" ]]; then
     run_all_presets
     python3 "$ROOT/tools/analyse_logs.py" "$LOG_DIR"/test*.txt
     python3 "$ROOT/tools/collect_results.py" "$seedId" "$LOG_DIR"/test*.txt >> "$RESULTS"
-    if [[ "$AUTO_SERVER" -eq 1 ]]; then
-      stop_server
-    fi
   done < "$SEEDS_FILE"
 
   python3 "$ROOT/tools/aggregate_results.py" "$RESULTS"

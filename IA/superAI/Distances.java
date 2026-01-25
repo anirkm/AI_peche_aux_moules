@@ -15,6 +15,7 @@ class Distances { // Parcours en largeur
     static int[] bfs(Labyrinthe laby, int startX, int startY) {
         // Distances BFS depuis une case (sans bonus)
         // Chaque pas coûte 1 tour
+        // Complexité : O(L*H) par appel.
         int n = laby.getLargeur() * laby.getHauteur();
         int[] dist = new int[n];
         Arrays.fill(dist, INFINI);
@@ -94,8 +95,26 @@ class Distances { // Parcours en largeur
         return dist;
     }
 
+    static int[] bfsCached(Labyrinthe laby, int startX, int startY, int[][] cache) {
+        // Cache simple intra-tour : même laby, même source => même BFS
+        if (cache == null) {
+            return bfs(laby, startX, startY);
+        }
+        if (!laby.dansBornes(startX, startY)) {
+            return bfs(laby, startX, startY);
+        }
+        int idx = laby.index(startX, startY);
+        int[] dist = cache[idx];
+        if (dist == null) {
+            dist = bfs(laby, startX, startY);
+            cache[idx] = dist;
+        }
+        return dist;
+    }
+
     static int[] bfsAvecBonus(Labyrinthe laby, int startX, int startY, int bonusSaut, int bonusTroisPas) {
         // BFS multi-états (case + nb de bonus restants)
+        // Chaque action (simple, saut, 3 pas) compte pour 1 tour.
         int n = laby.getLargeur() * laby.getHauteur();
         int[] best = new int[n];
         Arrays.fill(best, INFINI);
@@ -232,6 +251,7 @@ class Distances { // Parcours en largeur
     static int distanceAvecBonus(Labyrinthe laby, int startX, int startY,
                                  int bonusSaut, int bonusTroisPas, int cibleIdx) {
         // Variante BFS bonus-aware avec sortie anticipée sur la cible
+        // Permet un calcul rapide quand on ne cherche qu'une case précise.
         int n = laby.getLargeur() * laby.getHauteur();
         // Départ invalide
         if (!laby.dansBornes(startX, startY)) {

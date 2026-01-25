@@ -7,6 +7,7 @@ Cette doc sert à :
 - comprendre les règles et le but du jeu,
 - lancer un serveur et un client IA,
 - régler les paramètres et comparer les presets,
+- voir la structure du code IA,
 - débugger rapidement en cas de souci.
 
 > Si tu veux juste jouer : **Guide joueur** puis **Lancer une partie**.
@@ -30,6 +31,11 @@ Cette doc sert à :
     <h3>Paramétrer l'IA</h3>
     <p>Comprendre toutes les options de configuration.</p>
     <a href="parametres/">Paramètres CLI</a>
+  </div>
+  <div class="card">
+    <h3>Code IA</h3>
+    <p>Structure et organisation du client IA.</p>
+    <a href="structure/">Structure du projet</a>
   </div>
   <div class="card">
     <h3>Tester</h3>

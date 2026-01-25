@@ -140,10 +140,68 @@ Le seuil est réglé par `gainDistanceBonusMin` et `gainDistanceBonusMinAccel`.
   Sinon, l'IA joue un pas simple si possible.
 - **Trois pas (Bp)** : chaque pas est tenté dans l'ordre, les invalides sont ignorés.
 
+## Modèle adversaire
+
+- On estime la cible probable de chaque adversaire (meilleure valeur / distance).
+- Si une case est probable pour eux et qu'ils sont plus proches, on pénalise le choix.
+- Paramètre clé : `penaliteCibleAdverse`.
+- Désactivé par défaut (mettre un poids > 0 pour l’activer).
+
+## Carte de valeur (champ de potentiel)
+
+- On ajoute un score global basé sur toutes les cases utiles.
+- Ça aide à éviter les zigzags trop longs et oriente vers les zones denses.
+- Paramètre clé : `coeffCarteValeur`.
+- Désactivé par défaut (mettre un poids > 0 pour l’activer).
+
+## Gestion bonus avancée
+
+- Les bonus ne sont pris que si le gain en tours est réel.
+- Si le gain est fort, l'IA reçoit un petit bonus de score.
+- Paramètre clé : `bonusUsageEfficace`.
+- Désactivé par défaut (mettre un poids > 0 pour l’activer).
+
 ## Preset par défaut
 
-Le preset par défaut correspond à **G1** (rapide, stable sur beaucoup de seeds).
+Le preset par défaut correspond à **G1B0** (rapide, stable sur beaucoup de seeds).
 Tu peux surcharger tous les paramètres en ligne de commande.
+
+## Organisation du code IA
+
+- **IA.java** : orchestration générale (pipeline de décision).
+- **IAActions.java** : génération d’actions + scoring + pénalités.
+- **IACibles.java** : choix de cibles + adversaires + concurrence.
+- **IABeam.java** : recherche par faisceau (optionnelle).
+
+## Optimisations (perf, sans impact logique)
+
+- **Cache BFS intra‑tour** : si plusieurs actions mènent à la même case, le BFS est réutilisé.
+- **Liste compacte des cases utiles** (moules/bonus) pour l’estimation du futur.
+
+Objectif : mêmes décisions, moins de calcul.
+
+```mermaid
+flowchart LR
+    A[ClientSuperAI] --> B[IA]
+    B --> C[IAActions]
+    B --> D[IACibles]
+    B --> E[IABeam]
+    C --> F[Score & pénalités]
+    D --> G[Cibles & adversaires]
+    E --> H[Plans courts]
+    F --> I[Décision]
+    G --> I
+    H --> I
+```
+
+## Mode beam auto
+
+`modeBeam=2` active un faisceau **seulement** si le laby paraît complexe :
+- beaucoup de murs,
+- beaucoup de moules restantes,
+- grande grille.
+
+Ça évite le coût du beam dans les cas simples.
 
 ## Limites connues
 

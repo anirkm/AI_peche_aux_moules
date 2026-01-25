@@ -25,11 +25,28 @@ class MemoirePositions {
     }
 
     boolean contient(int idx) {
+        return compter(idx) > 0;
+    }
+
+    int compter(int idx) {
+        int count = 0;
         for (int i = 0; i < taille; i++) {
             if (buffer[i] == idx) {
-                return true;
+                count++;
             }
         }
-        return false;
+        return count;
+    }
+
+    int recent(int offset) {
+        // offset=0 => dernière position, offset=1 => avant-dernière, etc.
+        if (offset < 0 || offset >= taille) {
+            return -1;
+        }
+        int pos = index - 1 - offset;
+        if (pos < 0) {
+            pos += buffer.length;
+        }
+        return buffer[pos];
     }
 }

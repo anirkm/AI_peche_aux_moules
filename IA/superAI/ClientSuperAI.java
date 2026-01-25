@@ -52,7 +52,7 @@ public class ClientSuperAI {
             // Mémoire locale : bonus, dernier mouvement, positions récentes
             Inventaire inventaire = new Inventaire();
             char dernierMouvement = 'C';
-            MemoirePositions memoire = new MemoirePositions(6);
+            MemoirePositions memoire = new MemoirePositions(10);
             MemoireCible memoireCible = new MemoireCible();
             int toursSansPoints = 0;
 
@@ -124,6 +124,9 @@ public class ClientSuperAI {
         System.out.println("  penaliteImmobile=" + defauts.penaliteImmobile);
         System.out.println("  penaliteRetour=" + defauts.penaliteRetour);
         System.out.println("  penaliteBoucle=" + defauts.penaliteBoucle);
+        System.out.println("  penaliteCibleAdverse=" + defauts.penaliteCibleAdverse);
+        System.out.println("  coeffCarteValeur=" + defauts.coeffCarteValeur);
+        System.out.println("  bonusUsageEfficace=" + defauts.bonusUsageEfficace);
         System.out.println("  verrouillageCible=" + defauts.verrouillageCible);
         System.out.println("  seuilChangementCible=" + defauts.seuilChangementCible);
         System.out.println("  modeHybride=" + defauts.modeHybride);
@@ -133,6 +136,12 @@ public class ClientSuperAI {
         System.out.println("  modePlan=" + defauts.modePlan);
         System.out.println("  nbCiblesPlan=" + defauts.nbCiblesPlan);
         System.out.println("  profondeurPlan=" + defauts.profondeurPlan);
+        System.out.println("  modeBeam=" + defauts.modeBeam);
+        System.out.println("  largeurBeam=" + defauts.largeurBeam);
+        System.out.println("  profondeurBeam=" + defauts.profondeurBeam);
+        System.out.println("  beamAutoMur=" + defauts.beamAutoMur);
+        System.out.println("  beamAutoMinMoules=" + defauts.beamAutoMinMoules);
+        System.out.println("  beamAutoMinCases=" + defauts.beamAutoMinCases);
         System.out.println("  seuilAcceleration=" + defauts.seuilAcceleration);
         System.out.println("  seuilRarete=" + defauts.seuilRarete);
         System.out.println("  toursSansPointsMax=" + defauts.toursSansPointsMax);

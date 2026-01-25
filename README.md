@@ -20,12 +20,27 @@ L'IA pilote un joueur dans un **labyrinthe fermé** (murs tout autour). Le terra
 Les coordonnées sont en **(x,y)** avec l'origine en haut‑gauche (x vers la droite, y vers le bas).
 Les indices commencent à 0.
 
+### Ramassage
+
+- Ramasser une moule ajoute immédiatement ses points.
+- Ramasser un bonus l’ajoute à l’inventaire.
+- La case ramassée devient du sol (`So`).
+
 ### Bonus
 
 - **Bs (saut)** : avance de deux cases dans une direction, même si un mur est entre les deux.
   La case d'arrivée doit être marchable. Si elle ne l'est pas, l'action tente un pas simple.
 - **Bp (trois pas)** : enchaîne trois déplacements dans le même tour.
   Les pas invalides sont ignorés, les pas valides sont exécutés.
+  Les directions invalides sont traitées comme `C`.
+
+#### Cas limites (serveur)
+
+- Déplacement vers un mur = refusé (le joueur reste sur place).
+- Bs est consommé **uniquement** si la case d’arrivée est valide (sol/bonus/moule).
+- Si la case d’arrivée de Bs est un mur, un pas simple est tenté.
+- Si Bp contient une direction invalide, elle devient `C`.
+- Bp consomme le bonus si le joueur en possède un.
 
 ### Multijoueur
 
@@ -42,9 +57,8 @@ La partie se termine quand :
 
 ## Technique IA (résumé)
 
-L'IA repose sur une **recherche locale heuristique**. L'idée est simple : on calcule des
-distances exactes, puis on choisit l'action qui maximise un score (points + futur proche),
-tout en évitant les boucles.
+L'IA fait un scoring local : on calcule des distances exactes, puis on choisit l'action
+qui maximise un score (points + futur proche), tout en évitant les boucles.
 
 ### 1) Distances exactes (BFS)
 
@@ -58,7 +72,7 @@ Justification : le BFS est optimal sur un graphe non pondéré (coût par action
 Quand on ajoute les bonus, on étend l'espace d'états ; chaque transition coûte encore 1,
 donc le BFS reste optimal et fournit **la distance minimale en tours**.
 
-### 2) Évaluation heuristique des actions
+### 2) Évaluation des actions
 
 Pour chaque action possible, on simule localement puis on calcule un score :
 
@@ -110,6 +124,42 @@ est suffisant.
 Cette approche donne un bon compromis entre **performance**, **qualité de décision**
 et **temps de calcul**.
 
+### 6) Organisation du code IA
+
+- **IA.java** : orchestration générale.
+- **IAActions.java** : actions + scoring + pénalités.
+- **IACibles.java** : choix de cibles + adversaires.
+- **IABeam.java** : faisceau (optionnel).
+
+Par défaut, les modules optionnels (adversaires / carte de valeur / bonus avancés)
+sont **désactivés** pour rester rapide (preset G1B0).
+
+### Optimisations légères (sans impact logique)
+
+- Cache BFS intra‑tour : même source = même distance (évite des recalculs).
+- Liste compacte des cases utiles (moules/bonus) pour accélérer l’évaluation du futur.
+
+### Presets disponibles
+
+- **G1B0** : preset par défaut, rapide et stable.
+- **G1B0P** : active les modules optionnels (adversaires / carte de valeur / bonus avancés).
+- **G1AUTO** : beam auto (active le faisceau seulement sur cartes complexes).
+
+### Beam auto (modeBeam=2)
+
+Le faisceau s’active uniquement si la carte paraît complexe :
+
+- ratio de murs élevé,
+- beaucoup de moules restantes,
+- grande taille de grille.
+
+### Paramètres IA clés (extraits)
+
+- `modePlan`, `nbCiblesPlan`, `profondeurPlan` : planification locale top‑K.
+- `modeBeam`, `profondeurBeam`, `largeurBeam` : faisceau (coût vs stabilité).
+- `penaliteRepet`, `penaliteAllerRetour` : anti‑boucles.
+- `gainDistanceBonusMin`, `gainDistanceBonusMinAccel` : usage des bonus.
+- `penaliteCibleAdverse`, `coeffCarteValeur`, `bonusUsageEfficace` : modules optionnels.
 
 ## Documentation
 
@@ -120,6 +170,13 @@ et **temps de calcul**.
 python3 -m pip install -r requirements.txt
 mkdocs serve
 ```
+
+## Manuels PDF
+
+Deux manuels sont fournis :
+
+- `manuel_utilisateur.pdf`
+- `manuel_administrateur.pdf`
 
 ## Démarrage rapide
 
@@ -137,6 +194,17 @@ Client IA :
 javac -d IA IA/superAI/*.java
 java -cp IA superAI.ClientSuperAI 127.0.0.1 1337 MonEquipe
 ```
+
+Le port par défaut est **1337**.
+
+### Options serveur utiles
+
+- `-nbJoueur` : nombre de joueurs
+- `-delay` : délai entre tours (ms)
+- `-timeout` : durée max d’une partie (ms)
+- `-numLaby` : seed labyrinthe
+- `-numPlacementBonus` : seed bonus
+- `-tauxDeMur` : densité de murs (0–50)
 
 ## Lancer une partie reproductible (seeds fixes)
 
@@ -159,6 +227,11 @@ Analyser :
 ```bash
 python3 tools/analyse_logs.py IA/superAI/logs/test.txt
 ```
+
+Fichiers utiles :
+
+- `IA/superAI/logs/` : logs clients
+- `tools/results.csv` : agrégat des tests
 
 ## Tests automatisés
 

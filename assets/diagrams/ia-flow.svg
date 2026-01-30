@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+  <style>
+    .box { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.2; rx: 10; }
+    .title { font: 600 16px 'Arial', sans-serif; fill: #0f172a; }
+    .text { font: 14px 'Arial', sans-serif; fill: #334155; }
+    .arrow { stroke: #64748b; stroke-width: 1.4; fill: none; }
+  </style>
+
+  <rect class="box" x="60" y="40" width="280" height="70" rx="10" />
+  <text class="title" x="90" y="70">Recevoir l'état</text>
+  <text class="text" x="90" y="92">Socket TCP / message serveur</text>
+
+  <rect class="box" x="60" y="140" width="280" height="70" rx="10" />
+  <text class="title" x="90" y="170">Parser &amp; construire</text>
+  <text class="text" x="90" y="192">Labyrinthe, joueurs, bonus</text>
+
+  <rect class="box" x="60" y="240" width="280" height="70" rx="10" />
+  <text class="title" x="90" y="270">Calcul distances</text>
+  <text class="text" x="90" y="292">BFS + bonus-aware</text>
+
+  <rect class="box" x="60" y="340" width="280" height="70" rx="10" />
+  <text class="title" x="90" y="370">Évaluer actions</text>
+  <text class="text" x="90" y="392">Score + pénalités + futur</text>
+
+  <rect class="box" x="60" y="440" width="280" height="70" rx="10" />
+  <text class="title" x="90" y="470">Choisir &amp; envoyer</text>
+  <text class="text" x="90" y="492">Action optimale</text>
+
+  <rect class="box" x="460" y="140" width="380" height="70" rx="10" />
+  <text class="title" x="490" y="170">Choix de cible</text>
+  <text class="text" x="490" y="192">moules / bonus, mode plan</text>
+
+  <rect class="box" x="460" y="260" width="380" height="70" rx="10" />
+  <text class="title" x="490" y="290">Mémoire &amp; anti-boucle</text>
+  <text class="text" x="490" y="312">retours, stagnation, verrouillage</text>
+
+  <line class="arrow" x1="200" y1="110" x2="200" y2="140" />
+  <line class="arrow" x1="200" y1="210" x2="200" y2="240" />
+  <line class="arrow" x1="200" y1="310" x2="200" y2="340" />
+  <line class="arrow" x1="200" y1="410" x2="200" y2="440" />
+
+  <line class="arrow" x1="340" y1="175" x2="460" y2="175" />
+  <line class="arrow" x1="340" y1="275" x2="460" y2="275" />
+
+  <polygon points="200,138 194,128 206,128" fill="#64748b" />
+  <polygon points="200,238 194,228 206,228" fill="#64748b" />
+  <polygon points="200,338 194,328 206,328" fill="#64748b" />
+  <polygon points="200,438 194,428 206,428" fill="#64748b" />
+  <polygon points="458,175 448,169 448,181" fill="#64748b" />
+  <polygon points="458,275 448,269 448,281" fill="#64748b" />
+</svg>

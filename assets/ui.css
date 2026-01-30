@@ -1,0 +1,92 @@
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+:root {
+  --page-bg: #f3f4f6;
+  --page-bg-dark: #111827;
+}
+
+html, body, .md-container, .md-main, .md-main__inner,
+.md-content, .md-content__inner {
+  background: var(--page-bg) !important;
+}
+
+html[data-theme="dark"], body[data-theme="dark"],
+html.dark, body.dark, .dark,
+[data-theme="dark"], [data-md-color-scheme="slate"] {
+  background: var(--page-bg-dark) !important;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .md-container,
+html[data-theme="dark"] .md-main,
+html[data-theme="dark"] .md-main__inner,
+html[data-theme="dark"] .md-content,
+html[data-theme="dark"] .md-content__inner,
+html.dark .md-container,
+html.dark .md-main,
+html.dark .md-main__inner,
+html.dark .md-content,
+html.dark .md-content__inner,
+[data-theme="dark"] .md-container,
+[data-theme="dark"] .md-main,
+[data-theme="dark"] .md-main__inner,
+[data-theme="dark"] .md-content,
+[data-theme="dark"] .md-content__inner,
+[data-md-color-scheme="slate"] .md-container,
+[data-md-color-scheme="slate"] .md-main,
+[data-md-color-scheme="slate"] .md-main__inner,
+[data-md-color-scheme="slate"] .md-content,
+[data-md-color-scheme="slate"] .md-content__inner {
+  background: var(--page-bg-dark) !important;
+}
+
+.card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.05rem;
+}
+
+.card p {
+  margin: 0 0 10px 0;
+  color: #4b5563;
+}
+
+.dark .card, html.dark .card,
+html[data-theme="dark"] .card, [data-theme="dark"] .card,
+[data-md-color-scheme="slate"] .card {
+  background: #1f2937;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.dark .card p, html.dark .card p,
+html[data-theme="dark"] .card p, [data-theme="dark"] .card p,
+[data-md-color-scheme="slate"] .card p {
+  color: #cbd5f5;
+}
+
+.card a {
+  font-weight: 600;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  margin-left: 6px;
+}
